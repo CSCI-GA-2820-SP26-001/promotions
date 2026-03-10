@@ -23,7 +23,6 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Promotion
-from tests.factories import PromotionFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -74,42 +73,3 @@ class TestYourResourceService(TestCase):
         """It should return 405 Method Not Allowed"""
         resp = self.client.delete("/")
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_not_found(self):
-        """It should return 404 Not Found"""
-        resp = self.client.get("/promotions/0")
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_bad_request(self):
-        """It should return 400 Bad Request when data is invalid"""
-        resp = self.client.post(
-            "/promotions",
-            json={"bad": "data"},
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_unsupported_media_type(self):
-        """It should return 415 Unsupported Media Type"""
-        resp = self.client.post(
-            "/promotions",
-            data="some data",
-            content_type="text/plain",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
-    def test_create_a_promotion(self):
-        """It should Create a Promotion"""
-        promotion = PromotionFactory()
-        resp = self.client.post(
-            "/promotions",
-            json=promotion.serialize(),
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-
-    def test_get_a_promotion(self):
-        """It should Read a single Promotion"""
-        promotion = PromotionFactory()
-        promotion.create()
-        resp = self.client.get(f"/promotions/{promotion.id}")

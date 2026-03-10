@@ -23,8 +23,17 @@ and Delete YourResourceModel
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import YourResourceModel
+from service.models import YourResourceModel, DataValidationError
 from service.common import status  # HTTP Status Codes
+
+
+######################################################################
+# GET HEALTH CHECK
+######################################################################
+@app.route("/health")
+def health_check():
+    """Let them know our heart is still beating"""
+    return jsonify(status=200, message="Healthy"), status.HTTP_200_OK
 
 
 ######################################################################
@@ -43,4 +52,56 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-# Todo: Place your REST API code here ...
+
+######################################################################
+# CREATE A NEW PET
+######################################################################
+@app.route("/pets", methods=["POST"])
+def create_pets():
+    """
+    Create a Pet
+    This endpoint will create a Pet based the data in the body that is posted
+    """
+    app.logger.info("Request to Create a Pet...")
+    check_content_type("application/json")
+
+    pet = Pet()
+    # Get the data from the request and deserialize it
+    data = request.get_json()
+    app.logger.info("Processing: %s", data)
+    pet.deserialize(data)
+
+    # Save the new Pet to the database
+    pet.create()
+    app.logger.info("Pet with new id [%s] saved!", pet.id)
+
+    # Return the location of the new Pet
+    location_url = url_for("get_pets", pet_id=pet.id, _external=True)
+    return jsonify(pet.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+
+######################################################################
+# Checks the ContentType of a request
+######################################################################
+def check_content_type(content_type) -> None:
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        f"Content-Type must be {content_type}",
+    )

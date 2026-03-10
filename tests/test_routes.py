@@ -25,10 +25,13 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, YourResourceModel
+from tests.factories import PetFactory
+
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
+BASE_URL = "/pets"
 
 
 ######################################################################
@@ -72,4 +75,32 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
+    # ----------------------------------------------------------
+    # TEST CREATE
+    # ----------------------------------------------------------
+    def test_create_pet(self):
+        """It should Create a new Pet"""
+        test_pet = PetFactory()
+        logging.debug("Test Pet: %s", test_pet.serialize())
+        response = self.client.post(BASE_URL, json=test_pet.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = response.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_pet = response.get_json()
+        self.assertEqual(new_pet["name"], test_pet.name)
+        self.assertEqual(new_pet["category"], test_pet.category)
+        self.assertEqual(new_pet["available"], test_pet.available)
+        self.assertEqual(new_pet["gender"], test_pet.gender.name)
+
+        # Check that the location header was correct
+        response = self.client.get(location)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_pet = response.get_json()
+        self.assertEqual(new_pet["name"], test_pet.name)
+        self.assertEqual(new_pet["category"], test_pet.category)
+        self.assertEqual(new_pet["available"], test_pet.available)
+        self.assertEqual(new_pet["gender"], test_pet.gender.name)

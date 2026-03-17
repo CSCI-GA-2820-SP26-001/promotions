@@ -44,3 +44,29 @@ def index():
 ######################################################################
 
 # Todo: Place your REST API code here ...
+######################################################################
+# LIST PROMOTIONS BY TYPE
+######################################################################
+@app.route("/promotions", methods=["GET"])
+def list_promotions():
+    """Returns all Promotions, optionally filtered by type"""
+    app.logger.info("Request to list promotions...")
+
+    promotion_type = request.args.get("type")
+
+    if promotion_type:
+        app.logger.info("Filtering by type: %s", promotion_type)
+        try:
+            type_enum = PromotionType[promotion_type.upper()]
+        except KeyError:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                f"Invalid promotion type: {promotion_type}",
+            )
+        promotions = Promotion.find_by_type(type_enum)
+    else:
+        promotions = Promotion.all()
+
+    results = [p.serialize() for p in promotions]
+    app.logger.info("Returning %d promotions", len(results))
+    return jsonify(results), status.HTTP_200_OK

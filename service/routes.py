@@ -13,18 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ######################################################################
-
 """
-YourResourceModel Service
-
+Promotion Service
 This service implements a REST API that allows you to Create, Read, Update
-and Delete YourResourceModel
+and Delete Promotion
 """
-
-from flask import jsonify, request, url_for, abort
-from flask import current_app as app  # Import Flask application
-from service.models import YourResourceModel
-from service.common import status  # HTTP Status Codes
+from flask import jsonify, abort
+from flask import current_app as app
+from service.common import status
+from service.models import Promotion
 
 
 ######################################################################
@@ -34,7 +31,10 @@ from service.common import status  # HTTP Status Codes
 def index():
     """Root URL response"""
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            name="Promotion REST API Service",
+            version="1.0",
+        ),
         status.HTTP_200_OK,
     )
 
@@ -47,20 +47,21 @@ def index():
 # READ A PROMOTION
 ######################################################################
 @app.route("/promotions/<int:promotion_id>", methods=["GET"])
-def get_promotions(promotion_id):
+def get_promotion(promotion_id):
     """
     Retrieve a single Promotion
 
     This endpoint will return a Promotion based on its id
     """
-    app.logger.info("Request to Retrieve a promotion with id [%s]", promotion_id)
+    app.logger.info("Request to retrieve a promotion with id [%s]", promotion_id)
 
-    # Attempt to find the Promotion and abort if not found
     promotion = Promotion.find(promotion_id)
     if not promotion:
-        abort(status.HTTP_404_NOT_FOUND, f"Promotion with id '{promotion_id}' was not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Promotion with id '{promotion_id}' was not found."
+        )
 
-    app.logger.info("Returning promotion: %s", promotion.name)
     return jsonify(promotion.serialize()), status.HTTP_200_OK
 
 

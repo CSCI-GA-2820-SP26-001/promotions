@@ -13,18 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ######################################################################
-
 """
-YourResourceModel Service
+Promotion Service
 
 This service implements a REST API that allows you to Create, Read, Update
-and Delete YourResourceModel
+and Delete Promotion
 """
-
-from flask import jsonify, request, url_for, abort
-from flask import current_app as app  # Import Flask application
-from service.models import YourResourceModel
-from service.common import status  # HTTP Status Codes
+from flask import jsonify
+from flask import current_app as app
+from service.models import Promotion
+from service.common import status
 
 
 ######################################################################
@@ -34,12 +32,25 @@ from service.common import status  # HTTP Status Codes
 def index():
     """Root URL response"""
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            name="Promotion REST API Service",
+            version="1.0",
+        ),
         status.HTTP_200_OK,
     )
 
 
 ######################################################################
+# DELETE A PROMOTION
+######################################################################
+@app.route("/promotions/<int:promotion_id>", methods=["DELETE"])
+def delete_promotions(promotion_id):
+    """Deletes a Promotion"""
+    app.logger.info("Request to delete Promotion with id: %s", promotion_id)
+    promotion = Promotion.find(promotion_id)
+    if promotion:
+        promotion.delete()
+    return "", status.HTTP_204_NO_CONTENT
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 

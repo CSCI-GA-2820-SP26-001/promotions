@@ -46,7 +46,7 @@ def create_app():
 
         try:
             db.create_all()
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-except  # pragma: no cover
             app.logger.critical("%s: Cannot continue", error)
             # gunicorn requires exit code 4 to stop spawning workers when they die
             sys.exit(4)

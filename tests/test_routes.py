@@ -23,6 +23,7 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Promotion
+from .factories import PromotionFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -73,3 +74,40 @@ class TestYourResourceService(TestCase):
         """It should return 405 Method Not Allowed"""
         resp = self.client.delete("/")
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_a_promotion(self):
+        """It should Update an existing Promotion"""
+        promotion = PromotionFactory()
+        promotion.create()
+        data = promotion.serialize()
+        data["name"] = "Updated Sale"
+        resp = self.client.put(
+            f"/promotions/{promotion.id}",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated = resp.get_json()
+        self.assertEqual(updated["name"], "Updated Sale")
+
+    def test_update_promotion_not_found(self):
+        """It should return 404 when updating a non-existent Promotion"""
+        promotion = PromotionFactory()
+        data = promotion.serialize()
+        resp = self.client.put(
+            "/promotions/0",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_promotion_bad_data(self):
+        """It should return 400 when updating with invalid data"""
+        promotion = PromotionFactory()
+        promotion.create()
+        resp = self.client.put(
+            f"/promotions/{promotion.id}",
+            json={"name": "Missing required fields"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

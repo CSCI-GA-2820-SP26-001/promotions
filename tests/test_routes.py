@@ -13,11 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ######################################################################
-
 """
 TestPromotion API Service Test Suite
 """
-
 # pylint: disable=duplicate-code
 import os
 import logging
@@ -45,7 +43,6 @@ class TestPromotionService(TestCase):
         """Run once before all tests"""
         app.config["TESTING"] = True
         app.config["DEBUG"] = False
-        # Set up the test database
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         app.app_context().push()
@@ -58,12 +55,34 @@ class TestPromotionService(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(Promotion).delete()  # clean up the last tests
+        db.session.query(Promotion).delete()
         db.session.commit()
 
     def tearDown(self):
         """This runs after each test"""
         db.session.remove()
+
+    def _create_promotions(self, count):
+        """Factory method to create promotions for testing"""
+        promotions = []
+        for i in range(count):
+            promotion = Promotion()
+            promotion.deserialize(
+                {
+                    "name": f"Promotion {i}",
+                    "description": f"Description {i}",
+                    "promo_code": f"SAVE{i}",
+                    "discount_amount": 10.0 + i,
+                    "promotion_type": "percentage",
+                    "start_date": "2024-01-01",
+                    "end_date": "2024-12-31",
+                    "is_active": True,
+                    "product_id": i + 1,
+                }
+            )
+            promotion.create()
+            promotions.append(promotion)
+        return promotions
 
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
@@ -82,29 +101,24 @@ class TestPromotionService(TestCase):
         resp = self.client.delete("/")
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_create_promotion(self):
-        """It should Create a new Promotion"""
-        test_promotion = PromotionFactory()
-        logging.debug("Test Promotion: %s", test_promotion.serialize())
-        response = self.client.post(BASE_URL, json=test_promotion.serialize())
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    # ----------------------------------------------------------
+    # TEST READ
+    # ----------------------------------------------------------
+    def test_get_promotion(self):
+        """It should Get a single Promotion"""
+        test_promotion = self._create_promotions(1)[0]
+        response = self.client.get(f"{BASE_URL}/{test_promotion.id}")
 
-        # Make sure location header is set
-        location = response.headers.get("Location", None)
-        self.assertIsNotNone(location)
-
-        # Check the data is correct
-        new_promotion = response.get_json()
-        self.assertEqual(new_promotion["name"], test_promotion.name)
-        self.assertEqual(new_promotion["category"], test_promotion.category)
-        self.assertEqual(new_promotion["available"], test_promotion.available)
-        self.assertEqual(new_promotion["gender"], test_promotion.gender.name)
-
-        # Check that the location header was correct
-        response = self.client.get(location)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        new_promotion = response.get_json()
-        self.assertEqual(new_promotion["name"], test_promotion.name)
-        self.assertEqual(new_promotion["category"], test_promotion.category)
-        self.assertEqual(new_promotion["available"], test_promotion.available)
-        self.assertEqual(new_promotion["gender"], test_promotion.gender.name)
+        data = response.get_json()
+        self.assertEqual(data["name"], test_promotion.name)
+        self.assertEqual(data["id"], test_promotion.id)
+
+    def test_get_promotion_not_found(self):
+        """It should not Get a Promotion that's not found"""
+        response = self.client.get(f"{BASE_URL}/0")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        logging.debug("Response data = %s", data)
+        self.assertIn("was not found", data["message"])

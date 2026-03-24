@@ -13,11 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ######################################################################
-
 """
-Test cases for Pet Model
+Test cases for Promotion Model
 """
-
 # pylint: disable=duplicate-code
 import os
 import logging
@@ -33,7 +31,7 @@ DATABASE_URI = os.getenv(
 
 
 ######################################################################
-#  Promotion   M O D E L   T E S T   C A S E S
+#  P R O M O T I O N   M O D E L   T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
 class TestPromotion(TestCase):
@@ -55,7 +53,7 @@ class TestPromotion(TestCase):
 
     def setUp(self):
         """This runs before each test"""
-        db.session.query(Promotion).delete()  # clean up the last tests
+        db.session.query(Promotion).delete()
         db.session.commit()
 
     def tearDown(self):

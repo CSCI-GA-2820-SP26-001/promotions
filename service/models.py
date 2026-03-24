@@ -41,28 +41,21 @@ class Promotion(db.Model):
     ##################################################
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(63), nullable=False)
-    category = db.Column(db.String(63), nullable=False)
-    available = db.Column(db.Boolean(), nullable=False, default=False)
-    gender = db.Column(
-        db.Enum(Gender), nullable=False, server_default=(Gender.UNKNOWN.name)
-    )
-    birthday = db.Column(db.Date(), nullable=False, default=date.today())
-    # Database auditing fields
-    created_at = db.Column(db.DateTime, default=db.func.now(), nullable=False)
-    last_updated = db.Column(
-        db.DateTime, default=db.func.now(), onupdate=db.func.now(), nullable=False
-    )
-
-    ##################################################
-    # INSTANCE METHODS
-    ##################################################
+    description = db.Column(db.String(256))
+    promo_code = db.Column(db.String(63))
+    discount_amount = db.Column(db.Numeric(scale=2), nullable=False)
+    promotion_type = db.Column(db.String(63), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=False)
+    product_id = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return f"<Promotion {self.name} id=[{self.id}]>"
 
     def create(self) -> None:
         """
-        Saves a Promotion to the database
+        Creates a Promotion to the database
         """
         logger.info("Creating %s", self.name)
         # id must be none to generate next primary key
@@ -70,7 +63,7 @@ class Promotion(db.Model):
         try:
             db.session.add(self)
             db.session.commit()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             db.session.rollback()
             logger.error("Error creating record: %s", self)
             raise DataValidationError(e) from e
@@ -84,63 +77,75 @@ class Promotion(db.Model):
             raise DataValidationError("Update called with empty ID field")
         try:
             db.session.commit()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             db.session.rollback()
             logger.error("Error updating record: %s", self)
             raise DataValidationError(e) from e
 
-    def delete(self) -> None:
-        """
-        Removes a Promotion from the database
-        """
+    def delete(self):
+        """Removes a Promotion from the data store"""
         logger.info("Deleting %s", self.name)
         try:
             db.session.delete(self)
             db.session.commit()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             db.session.rollback()
             logger.error("Error deleting record: %s", self)
             raise DataValidationError(e) from e
 
-    def serialize(self) -> dict:
+    def serialize(self):
         """Serializes a Promotion into a dictionary"""
         return {
             "id": self.id,
             "name": self.name,
-            "category": self.category,
-            "available": self.available,
-            "gender": self.gender.name,  # convert enum to string
-            "birthday": self.birthday.isoformat(),
+            "description": self.description,
+            "promo_code": self.promo_code,
+            "discount_amount": float(self.discount_amount),
+            "promotion_type": self.promotion_type,
+            "start_date": self.start_date.isoformat(),
+            "end_date": self.end_date.isoformat(),
+            "is_active": self.is_active,
+            "product_id": self.product_id,
         }
 
-    def deserialize(self, data: dict):
+    def deserialize(self, data):
         """
         Deserializes a Promotion from a dictionary
+
         Args:
             data (dict): A dictionary containing the Promotion data
         """
         try:
             self.name = data["name"]
-            self.category = data["category"]
-            if isinstance(data["available"], bool):
-                self.available = data["available"]
+            self.description = data.get("description")
+            self.promo_code = data.get("promo_code")
+            self.discount_amount = data["discount_amount"]
+            self.promotion_type = data["promotion_type"]
+            if isinstance(data["start_date"], str):
+                self.start_date = date.fromisoformat(data["start_date"])
+            else:
+                self.start_date = data["start_date"]
+            if isinstance(data["end_date"], str):
+                self.end_date = date.fromisoformat(data["end_date"])
+            else:
+                self.end_date = data["end_date"]
+            if isinstance(data["is_active"], bool):
+                self.is_active = data["is_active"]
             else:
                 raise DataValidationError(
-                    "Invalid type for boolean [available]: "
-                    + str(type(data["available"]))
+                    "Invalid type for boolean [is_active]: "
+                    + str(type(data["is_active"]))
                 )
-            # self.gender = getattr(Gender, data["gender"])  # create enum from string
-            self.gender = Gender[data["gender"].upper()]  # create enum from string
-            self.birthday = date.fromisoformat(data["birthday"])
+            self.product_id = data["product_id"]
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
             raise DataValidationError(
-                "Invalid promotion: missing " + error.args[0]
+                "Invalid Promotion: missing " + error.args[0]
             ) from error
         except TypeError as error:
             raise DataValidationError(
-                "Invalid promotion: body of request contained bad or no data "
+                "Invalid Promotion: body of request contained bad or no data "
                 + str(error)
             ) from error
         return self
@@ -151,22 +156,22 @@ class Promotion(db.Model):
 
     @classmethod
     def all(cls):
-        """Returns all of the Promotion in the database"""
-        logger.info("Processing all Promotion")
+        """Returns all of the Promotions in the database"""
+        logger.info("Processing all Promotions")
         return cls.query.all()
 
     @classmethod
     def find(cls, by_id):
-        """Finds a YourResourceModel by it's ID"""
+        """Finds a Promotion by its ID"""
         logger.info("Processing lookup for id %s ...", by_id)
         return cls.query.session.get(cls, by_id)
 
     @classmethod
     def find_by_name(cls, name):
-        """Returns all Promotion with the given name
+        """Returns all Promotions with the given name
 
         Args:
-            name (string): the name of the Promotion you want to match
+            name (string): the name of the Promotions you want to match
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)

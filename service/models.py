@@ -5,8 +5,10 @@ All of the models are stored in this module
 """
 
 import logging
+from enum import Enum
 from datetime import date
 from flask_sqlalchemy import SQLAlchemy
+
 
 logger = logging.getLogger("flask.app")
 
@@ -18,9 +20,20 @@ class DataValidationError(Exception):
     """Used for an data validation errors when deserializing"""
 
 
+class Gender(Enum):
+    """Enumeration of valid Promotion Genders"""
+
+    MALE = 0
+    FEMALE = 1
+    UNKNOWN = 3
+
+
 class Promotion(db.Model):
     """
     Class that represents a Promotion
+
+    This version uses a relational database for persistence which is hidden
+    from us by SQLAlchemy's object relational mappings (ORM)
     """
 
     ##################################################
@@ -40,11 +53,12 @@ class Promotion(db.Model):
     def __repr__(self):
         return f"<Promotion {self.name} id=[{self.id}]>"
 
-    def create(self):
+    def create(self) -> None:
         """
         Creates a Promotion to the database
         """
         logger.info("Creating %s", self.name)
+        # id must be none to generate next primary key
         self.id = None  # pylint: disable=invalid-name
         try:
             db.session.add(self)
@@ -54,7 +68,7 @@ class Promotion(db.Model):
             logger.error("Error creating record: %s", self)
             raise DataValidationError(e) from e
 
-    def update(self):
+    def update(self) -> None:
         """
         Updates a Promotion to the database
         """
@@ -99,7 +113,7 @@ class Promotion(db.Model):
         Deserializes a Promotion from a dictionary
 
         Args:
-            data (dict): A dictionary containing the resource data
+            data (dict): A dictionary containing the Promotion data
         """
         try:
             self.name = data["name"]

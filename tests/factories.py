@@ -2,13 +2,14 @@
 Test Factory to make fake objects for testing
 """
 
+from datetime import date
 import factory
-from datetime import date, timedelta
-from service.models import Promotion
+from factory.fuzzy import FuzzyChoice, FuzzyDate
+from service.models import Gender, Promotion
 
 
 class PromotionFactory(factory.Factory):
-    """Creates fake promotions for testing"""
+    """Creates fake promotions that you don't have to feed"""
 
     class Meta:  # pylint: disable=too-few-public-methods
         """Maps factory to data model"""

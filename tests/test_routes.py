@@ -28,13 +28,14 @@ from tests.factories import PromotionFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
+BASE_URL = "/promotions"
 
 
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceService(TestCase):
+class TestPromotionService(TestCase):
     """REST API Server Tests"""
 
     @classmethod
@@ -61,6 +62,28 @@ class TestYourResourceService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
+    def _create_promotions(self, count):
+        """Factory method to create promotions for testing"""
+        promotions = []
+        for i in range(count):
+            promotion = Promotion()
+            promotion.deserialize(
+                {
+                    "name": f"Promotion {i}",
+                    "description": f"Description {i}",
+                    "promo_code": f"SAVE{i}",
+                    "discount_amount": 10.0 + i,
+                    "promotion_type": "percentage",
+                    "start_date": "2024-01-01",
+                    "end_date": "2024-12-31",
+                    "is_active": True,
+                    "product_id": i + 1,
+                }
+            )
+            promotion.create()
+            promotions.append(promotion)
+        return promotions
+
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
@@ -70,6 +93,9 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+    # ----------------------------------------------------------
+    # TEST CREATE
+    # ----------------------------------------------------------
     def test_method_not_allowed(self):
         """It should return 405 Method Not Allowed"""
         resp = self.client.delete("/")
@@ -86,3 +112,24 @@ class TestYourResourceService(TestCase):
         """It should return 204 even when Promotion does not exist"""
         resp = self.client.delete("/promotions/0")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+    # ----------------------------------------------------------
+    # TEST READ
+    # ----------------------------------------------------------
+    def test_get_promotion(self):
+        """It should Get a single Promotion"""
+        test_promotion = self._create_promotions(1)[0]
+        response = self.client.get(f"{BASE_URL}/{test_promotion.id}")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["name"], test_promotion.name)
+        self.assertEqual(data["id"], test_promotion.id)
+
+    def test_get_promotion_not_found(self):
+        """It should not Get a Promotion that's not found"""
+        response = self.client.get(f"{BASE_URL}/0")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        logging.debug("Response data = %s", data)
+        self.assertIn("was not found", data["message"])

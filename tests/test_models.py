@@ -63,7 +63,6 @@ class TestPromotion(TestCase):
     ######################################################################
     #  T E S T   C A S E S
     ######################################################################
-
     def test_create_a_promotion(self):
         """It should Create a Promotion and assert that it exists"""
         promotion = Promotion(

@@ -15,6 +15,7 @@
 ######################################################################
 """
 Promotion Service
+
 This service implements a REST API that allows you to Create, Read, Update
 and Delete Promotion
 """
@@ -50,3 +51,87 @@ def delete_promotions(promotion_id):
     if promotion:
         promotion.delete()
     return "", status.HTTP_204_NO_CONTENT
+#  R E S T   A P I   E N D P O I N T S
+######################################################################
+
+
+######################################################################
+# READ A PET
+######################################################################
+@app.route("/promotions/<int:promotion_id>", methods=["GET"])
+def get_promotions(promotion_id):
+    """
+    Retrieve a single Promotion
+
+    This endpoint will return a Promotion based on it's id
+    """
+    app.logger.info("Request to Retrieve a promotion with id [%s]", promotion_id)
+
+    # Attempt to find the Promotion and abort if not found
+    promotion = Promotion.find(promotion_id)
+    if not promotion:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Promotion with id '{promotion_id}' was not found.",
+        )
+
+    app.logger.info("Returning promotion: %s", promotion.name)
+    return jsonify(promotion.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# CREATE A NEW PET
+######################################################################
+@app.route("/promotions", methods=["POST"])
+def create_promotions():
+    """
+    Create a Promotion
+    This endpoint will create a Promotion based the data in the body that is posted
+    """
+    app.logger.info("Request to Create a Promotion...")
+    check_content_type("application/json")
+
+    promotion = Promotion()
+    # Get the data from the request and deserialize it
+    data = request.get_json()
+    app.logger.info("Processing: %s", data)
+    promotion.deserialize(data)
+
+    # Save the new Promotion to the database
+    promotion.create()
+    app.logger.info("Promotion with new id [%s] saved!", promotion.id)
+
+    # Return the location of the new Promotion
+    location_url = url_for("get_promotions", promotion_id=promotion.id, _external=True)
+    return (
+        jsonify(promotion.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
+
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+
+######################################################################
+# Checks the ContentType of a request
+######################################################################
+def check_content_type(content_type) -> None:
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        f"Content-Type must be {content_type}",
+    )

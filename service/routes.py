@@ -21,7 +21,7 @@ and Delete Promotion
 """
 from flask import jsonify, request, abort
 from flask import current_app as app
-from service.models import Promotion, DataValidationError
+from service.models import Promotion, DataValidationError, PromotionType
 from service.common import status
 
 
@@ -38,6 +38,33 @@ def index():
         ),
         status.HTTP_200_OK,
     )
+
+
+######################################################################
+# CREATE A NEW PROMOTION
+######################################################################
+@app.route("/promotions", methods=["POST"])
+def create_promotions():
+    """Create a Promotion"""
+    promotion = Promotion()
+    try:
+        promotion.deserialize(request.get_json())
+    except DataValidationError as error:
+        abort(status.HTTP_400_BAD_REQUEST, str(error))
+    promotion.create()
+    return jsonify(promotion.serialize()), status.HTTP_201_CREATED
+
+
+######################################################################
+# READ A SINGLE PROMOTION
+######################################################################
+@app.route("/promotions/<int:promotion_id>", methods=["GET"])
+def get_promotions(promotion_id):
+    """Read a Promotion"""
+    promotion = Promotion.find(promotion_id)
+    if not promotion:
+        abort(status.HTTP_404_NOT_FOUND, f"Promotion with id '{promotion_id}' was not found.")
+    return jsonify(promotion.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
@@ -82,13 +109,13 @@ def list_promotions():
     if promotion_type:
         app.logger.info("Filtering by type: %s", promotion_type)
         try:
-            type_enum = PromotionType[promotion_type.upper()]
-        except KeyError:
+            type_enum = PromotionType(promotion_type.lower())
+        except ValueError:
             abort(
                 status.HTTP_400_BAD_REQUEST,
                 f"Invalid promotion type: {promotion_type}",
             )
-        promotions = Promotion.find_by_type(type_enum)
+        promotions = Promotion.find_by_type(type_enum.value)
     else:
         promotions = Promotion.all()
 

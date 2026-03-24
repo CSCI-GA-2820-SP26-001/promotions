@@ -100,7 +100,7 @@ class TestPromotionService(TestCase):
         for _ in range(count):
             test_promotion = PromotionFactory()
             if promotion_type:
-                test_promotion.type = promotion_type
+                test_promotion.promotion_type = promotion_type
             response = self.client.post(BASE_URL, json=test_promotion.serialize())
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             new_promotion = response.get_json()
@@ -119,19 +119,19 @@ class TestPromotionService(TestCase):
     def test_list_promotions_by_type(self):
         """It should return only Promotions matching the requested type"""
         promotions = self._create_promotions(10)
-        target_type = promotions[0].type.name
-        count = len([p for p in promotions if p.type.name == target_type])
+        target_type = promotions[0].promotion_type
+        count = len([p for p in promotions if p.promotion_type == target_type])
         response = self.client.get(f"{BASE_URL}?type={target_type}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertEqual(len(data), count)
         for promotion in data:
-            self.assertEqual(promotion["type"], target_type)
+            self.assertEqual(promotion["promotion_type"], target_type)
 
     def test_list_promotions_by_type_empty(self):
         """It should return an empty list when no Promotions match the type"""
-        self._create_promotions(3, promotion_type=PromotionType.BOGO)
-        response = self.client.get(f"{BASE_URL}?type=SALE")
+        self._create_promotions(3, promotion_type="percentage")
+        response = self.client.get(f"{BASE_URL}?type=fixed_amount")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertEqual(len(data), 0)

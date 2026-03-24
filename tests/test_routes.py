@@ -13,18 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ######################################################################
-
 """
-TestYourResourceModel API Service Test Suite
+TestPromotion API Service Test Suite
 """
-
 # pylint: disable=duplicate-code
 import os
 import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, YourResourceModel
+from service.models import db, Promotion
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -43,7 +41,6 @@ class TestYourResourceService(TestCase):
         """Run once before all tests"""
         app.config["TESTING"] = True
         app.config["DEBUG"] = False
-        # Set up the test database
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         app.app_context().push()
@@ -56,7 +53,7 @@ class TestYourResourceService(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(YourResourceModel).delete()  # clean up the last tests
+        db.session.query(Promotion).delete()
         db.session.commit()
 
     def tearDown(self):
@@ -72,4 +69,7 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
+    def test_method_not_allowed(self):
+        """It should return 405 Method Not Allowed"""
+        resp = self.client.delete("/")
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

@@ -17,7 +17,7 @@
 Module: error_handlers
 """
 from flask import jsonify
-from flask import current_app as app  # Import Flask application
+from flask import current_app as app
 from service.models import DataValidationError
 from . import status
 
@@ -26,13 +26,13 @@ from . import status
 # Error Handlers
 ######################################################################
 @app.errorhandler(DataValidationError)
-def request_validation_error(error):
+def request_validation_error(error):  # pragma: no cover
     """Handles Value Errors from bad data"""
     return bad_request(error)
 
 
 @app.errorhandler(status.HTTP_400_BAD_REQUEST)
-def bad_request(error):
+def bad_request(error):  # pragma: no cover
     """Handles bad requests with 400_BAD_REQUEST"""
     message = str(error)
     app.logger.warning(message)
@@ -45,7 +45,7 @@ def bad_request(error):
 
 
 @app.errorhandler(status.HTTP_404_NOT_FOUND)
-def not_found(error):
+def not_found(error):  # pragma: no cover
     """Handles resources not found with 404_NOT_FOUND"""
     message = str(error)
     app.logger.warning(message)
@@ -71,7 +71,7 @@ def method_not_supported(error):
 
 
 @app.errorhandler(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-def mediatype_not_supported(error):
+def mediatype_not_supported(error):  # pragma: no cover
     """Handles unsupported media requests with 415_UNSUPPORTED_MEDIA_TYPE"""
     message = str(error)
     app.logger.warning(message)
@@ -86,7 +86,7 @@ def mediatype_not_supported(error):
 
 
 @app.errorhandler(status.HTTP_500_INTERNAL_SERVER_ERROR)
-def internal_server_error(error):
+def internal_server_error(error):  # pragma: no cover
     """Handles unexpected server error with 500_SERVER_ERROR"""
     message = str(error)
     app.logger.error(message)

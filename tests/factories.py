@@ -2,10 +2,9 @@
 Test Factory to make fake objects for testing
 """
 
-from datetime import date
+from datetime import date, timedelta
 import factory
-from factory.fuzzy import FuzzyChoice, FuzzyDate
-from service.models import Gender, Promotion
+from service.models import Promotion
 
 
 class PromotionFactory(factory.Factory):

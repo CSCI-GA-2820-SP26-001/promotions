@@ -28,6 +28,13 @@ class Gender(Enum):
     UNKNOWN = 3
 
 
+class PromotionType(Enum):
+    """Enumeration of valid Promotion Types"""
+
+    PERCENTAGE = "percentage"
+    FIXED_AMOUNT = "fixed_amount"
+
+
 class Promotion(db.Model):
     """
     Class that represents a Promotion
@@ -165,6 +172,12 @@ class Promotion(db.Model):
         """Finds a Promotion by its ID"""
         logger.info("Processing lookup for id %s ...", by_id)
         return cls.query.session.get(cls, by_id)
+
+    @classmethod
+    def find_by_type(cls, promotion_type):
+        """Returns all Promotions with the given type"""
+        logger.info("Processing type query for %s ...", promotion_type)
+        return cls.query.filter(cls.promotion_type == promotion_type)
 
     @classmethod
     def find_by_name(cls, name):

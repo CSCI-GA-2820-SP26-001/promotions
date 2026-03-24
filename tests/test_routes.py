@@ -15,7 +15,7 @@
 ######################################################################
 
 """
-TestYourResourceModel API Service Test Suite
+TestPromotion API Service Test Suite
 """
 
 # pylint: disable=duplicate-code
@@ -24,21 +24,20 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, YourResourceModel
-from tests.factories import PetFactory
-
+from service.models import db, Promotion
+from tests.factories import PromotionFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
-BASE_URL = "/pets"
+BASE_URL = "/promotions"
 
 
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceService(TestCase):
+class TestPromotionService(TestCase):
     """REST API Server Tests"""
 
     @classmethod
@@ -59,7 +58,7 @@ class TestYourResourceService(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(YourResourceModel).delete()  # clean up the last tests
+        db.session.query(Promotion).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -78,11 +77,16 @@ class TestYourResourceService(TestCase):
     # ----------------------------------------------------------
     # TEST CREATE
     # ----------------------------------------------------------
-    def test_create_pet(self):
-        """It should Create a new Pet"""
-        test_pet = PetFactory()
-        logging.debug("Test Pet: %s", test_pet.serialize())
-        response = self.client.post(BASE_URL, json=test_pet.serialize())
+    def test_method_not_allowed(self):
+        """It should return 405 Method Not Allowed"""
+        resp = self.client.delete("/")
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_create_promotion(self):
+        """It should Create a new Promotion"""
+        test_promotion = PromotionFactory()
+        logging.debug("Test Promotion: %s", test_promotion.serialize())
+        response = self.client.post(BASE_URL, json=test_promotion.serialize())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Make sure location header is set
@@ -90,17 +94,17 @@ class TestYourResourceService(TestCase):
         self.assertIsNotNone(location)
 
         # Check the data is correct
-        new_pet = response.get_json()
-        self.assertEqual(new_pet["name"], test_pet.name)
-        self.assertEqual(new_pet["category"], test_pet.category)
-        self.assertEqual(new_pet["available"], test_pet.available)
-        self.assertEqual(new_pet["gender"], test_pet.gender.name)
+        new_promotion = response.get_json()
+        self.assertEqual(new_promotion["name"], test_promotion.name)
+        self.assertEqual(new_promotion["category"], test_promotion.category)
+        self.assertEqual(new_promotion["available"], test_promotion.available)
+        self.assertEqual(new_promotion["gender"], test_promotion.gender.name)
 
         # Check that the location header was correct
         response = self.client.get(location)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        new_pet = response.get_json()
-        self.assertEqual(new_pet["name"], test_pet.name)
-        self.assertEqual(new_pet["category"], test_pet.category)
-        self.assertEqual(new_pet["available"], test_pet.available)
-        self.assertEqual(new_pet["gender"], test_pet.gender.name)
+        new_promotion = response.get_json()
+        self.assertEqual(new_promotion["name"], test_promotion.name)
+        self.assertEqual(new_promotion["category"], test_promotion.category)
+        self.assertEqual(new_promotion["available"], test_promotion.available)
+        self.assertEqual(new_promotion["gender"], test_promotion.gender.name)

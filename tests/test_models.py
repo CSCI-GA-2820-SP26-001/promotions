@@ -22,9 +22,10 @@ Test cases for Pet Model
 import os
 import logging
 from unittest import TestCase
+from datetime import date, timedelta
 from wsgi import app
-from service.models import YourResourceModel, DataValidationError, db
-from .factories import YourResourceModelFactory
+from service.models import Promotion, DataValidationError, db
+from .factories import PromotionFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -32,11 +33,11 @@ DATABASE_URI = os.getenv(
 
 
 ######################################################################
-#  YourResourceModel   M O D E L   T E S T   C A S E S
+#  Promotion   M O D E L   T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceModel(TestCase):
-    """Test Cases for YourResourceModel Model"""
+class TestPromotion(TestCase):
+    """Test Cases for Promotion Model"""
 
     @classmethod
     def setUpClass(cls):
@@ -54,7 +55,7 @@ class TestYourResourceModel(TestCase):
 
     def setUp(self):
         """This runs before each test"""
-        db.session.query(YourResourceModel).delete()  # clean up the last tests
+        db.session.query(Promotion).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -64,16 +65,165 @@ class TestYourResourceModel(TestCase):
     ######################################################################
     #  T E S T   C A S E S
     ######################################################################
+    def test_create_a_promotion(self):
+        """It should Create a Promotion and assert that it exists"""
+        promotion = Promotion(
+            name="Summer Sale",
+            description="Big summer discounts",
+            promo_code="SUMMER20",
+            discount_amount=20.00,
+            promotion_type="percentage",
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=30),
+            is_active=True,
+            product_id=1,
+        )
+        self.assertEqual(promotion.name, "Summer Sale")
+        self.assertIn("Summer Sale", repr(promotion))
 
-    def test_example_replace_this(self):
-        """It should create a YourResourceModel"""
-        # Todo: Remove this test case example
-        resource = YourResourceModelFactory()
-        resource.create()
-        self.assertIsNotNone(resource.id)
-        found = YourResourceModel.all()
-        self.assertEqual(len(found), 1)
-        data = YourResourceModel.find(resource.id)
-        self.assertEqual(data.name, resource.name)
+    def test_add_a_promotion(self):
+        """It should Create a Promotion and add it to the database"""
+        promotions = Promotion.all()
+        self.assertEqual(promotions, [])
+        promotion = PromotionFactory()
+        promotion.create()
+        self.assertIsNotNone(promotion.id)
+        promotions = Promotion.all()
+        self.assertEqual(len(promotions), 1)
 
-    # Todo: Add your test cases here...
+    def test_read_a_promotion(self):
+        """It should Read a Promotion"""
+        promotion = PromotionFactory()
+        promotion.create()
+        found = Promotion.find(promotion.id)
+        self.assertEqual(found.id, promotion.id)
+        self.assertEqual(found.name, promotion.name)
+
+    def test_update_a_promotion(self):
+        """It should Update a Promotion"""
+        promotion = PromotionFactory()
+        promotion.create()
+        self.assertIsNotNone(promotion.id)
+        promotion.name = "Updated Sale"
+        original_id = promotion.id
+        promotion.update()
+        self.assertEqual(promotion.id, original_id)
+        self.assertEqual(promotion.name, "Updated Sale")
+        promotions = Promotion.all()
+        self.assertEqual(len(promotions), 1)
+        self.assertEqual(promotions[0].name, "Updated Sale")
+
+    def test_update_no_id(self):
+        """It should not Update a Promotion with no id"""
+        promotion = PromotionFactory()
+        promotion.id = None
+        self.assertRaises(DataValidationError, promotion.update)
+
+    def test_delete_a_promotion(self):
+        """It should Delete a Promotion"""
+        promotion = PromotionFactory()
+        promotion.create()
+        self.assertEqual(len(Promotion.all()), 1)
+        promotion.delete()
+        self.assertEqual(len(Promotion.all()), 0)
+
+    def test_list_all_promotions(self):
+        """It should List all Promotions in the database"""
+        promotions = Promotion.all()
+        self.assertEqual(promotions, [])
+        for _ in range(5):
+            promotion = PromotionFactory()
+            promotion.create()
+        promotions = Promotion.all()
+        self.assertEqual(len(promotions), 5)
+
+    def test_serialize_a_promotion(self):
+        """It should Serialize a Promotion"""
+        promotion = PromotionFactory()
+        promotion.create()
+        data = promotion.serialize()
+        self.assertIsNotNone(data)
+        self.assertIn("id", data)
+        self.assertEqual(data["name"], promotion.name)
+
+    def test_deserialize_a_promotion(self):
+        """It should Deserialize a Promotion"""
+        data = {
+            "name": "Flash Sale",
+            "description": "Quick discount",
+            "promo_code": "FLASH10",
+            "discount_amount": 10.00,
+            "promotion_type": "fixed_amount",
+            "start_date": date.today().isoformat(),
+            "end_date": (date.today() + timedelta(days=7)).isoformat(),
+            "is_active": True,
+            "product_id": 42,
+        }
+        promotion = Promotion()
+        promotion.deserialize(data)
+        self.assertEqual(promotion.name, "Flash Sale")
+
+    def test_deserialize_with_date_objects(self):
+        """It should Deserialize a Promotion with date objects instead of strings"""
+        data = {
+            "name": "Flash Sale",
+            "description": "Quick discount",
+            "promo_code": "FLASH10",
+            "discount_amount": 10.00,
+            "promotion_type": "fixed_amount",
+            "start_date": date.today(),
+            "end_date": date.today() + timedelta(days=7),
+            "is_active": True,
+            "product_id": 42,
+        }
+        promotion = Promotion()
+        promotion.deserialize(data)
+        self.assertEqual(promotion.name, "Flash Sale")
+
+    def test_deserialize_missing_data(self):
+        """It should not Deserialize a Promotion with missing data"""
+        data = {"name": "Incomplete Sale"}
+        promotion = Promotion()
+        self.assertRaises(DataValidationError, promotion.deserialize, data)
+
+    def test_deserialize_bad_data(self):
+        """It should not Deserialize a Promotion with bad data"""
+        data = "this is not a dictionary"
+        promotion = Promotion()
+        self.assertRaises(DataValidationError, promotion.deserialize, data)
+
+    def test_deserialize_bad_is_active(self):
+        """It should not Deserialize a Promotion with bad is_active"""
+        data = {
+            "name": "Bad Sale",
+            "description": "Test",
+            "promo_code": "BAD",
+            "discount_amount": 10.00,
+            "promotion_type": "percentage",
+            "start_date": date.today().isoformat(),
+            "end_date": (date.today() + timedelta(days=7)).isoformat(),
+            "is_active": "yes",
+            "product_id": 1,
+        }
+        promotion = Promotion()
+        self.assertRaises(DataValidationError, promotion.deserialize, data)
+
+    def test_find_promotion(self):
+        """It should Find a Promotion by ID"""
+        promotions = PromotionFactory.create_batch(5)
+        for promotion in promotions:
+            promotion.create()
+        target = promotions[2]
+        found = Promotion.find(target.id)
+        self.assertIsNotNone(found)
+        self.assertEqual(found.id, target.id)
+
+    def test_find_by_name(self):
+        """It should Find Promotions by Name"""
+        promotions = PromotionFactory.create_batch(10)
+        for promotion in promotions:
+            promotion.create()
+        name = promotions[0].name
+        count = len([p for p in promotions if p.name == name])
+        found = Promotion.find_by_name(name)
+        self.assertEqual(found.count(), count)

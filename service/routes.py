@@ -15,15 +15,15 @@
 ######################################################################
 
 """
-YourResourceModel Service
+Promotion Service
 
 This service implements a REST API that allows you to Create, Read, Update
-and Delete YourResourceModel
+and Delete Promotion
 """
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import YourResourceModel, DataValidationError
+from service.models import Promotion
 from service.common import status  # HTTP Status Codes
 
 
@@ -43,7 +43,10 @@ def health_check():
 def index():
     """Root URL response"""
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            name="Promotion REST API Service",
+            version="1.0",
+        ),
         status.HTTP_200_OK,
     )
 
@@ -54,30 +57,58 @@ def index():
 
 
 ######################################################################
+# READ A PET
+######################################################################
+@app.route("/promotions/<int:promotion_id>", methods=["GET"])
+def get_promotions(promotion_id):
+    """
+    Retrieve a single Promotion
+
+    This endpoint will return a Promotion based on it's id
+    """
+    app.logger.info("Request to Retrieve a promotion with id [%s]", promotion_id)
+
+    # Attempt to find the Promotion and abort if not found
+    promotion = Promotion.find(promotion_id)
+    if not promotion:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Promotion with id '{promotion_id}' was not found.",
+        )
+
+    app.logger.info("Returning promotion: %s", promotion.name)
+    return jsonify(promotion.serialize()), status.HTTP_200_OK
+
+
+######################################################################
 # CREATE A NEW PET
 ######################################################################
-@app.route("/pets", methods=["POST"])
-def create_pets():
+@app.route("/promotions", methods=["POST"])
+def create_promotions():
     """
-    Create a Pet
-    This endpoint will create a Pet based the data in the body that is posted
+    Create a Promotion
+    This endpoint will create a Promotion based the data in the body that is posted
     """
-    app.logger.info("Request to Create a Pet...")
+    app.logger.info("Request to Create a Promotion...")
     check_content_type("application/json")
 
-    pet = Pet()
+    promotion = Promotion()
     # Get the data from the request and deserialize it
     data = request.get_json()
     app.logger.info("Processing: %s", data)
-    pet.deserialize(data)
+    promotion.deserialize(data)
 
-    # Save the new Pet to the database
-    pet.create()
-    app.logger.info("Pet with new id [%s] saved!", pet.id)
+    # Save the new Promotion to the database
+    promotion.create()
+    app.logger.info("Promotion with new id [%s] saved!", promotion.id)
 
-    # Return the location of the new Pet
-    location_url = url_for("get_pets", pet_id=pet.id, _external=True)
-    return jsonify(pet.serialize()), status.HTTP_201_CREATED, {"Location": location_url}
+    # Return the location of the new Promotion
+    location_url = url_for("get_promotions", promotion_id=promotion.id, _external=True)
+    return (
+        jsonify(promotion.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
 
 
 ######################################################################

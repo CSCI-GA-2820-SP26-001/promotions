@@ -3,19 +3,18 @@ Test Factory to make fake objects for testing
 """
 
 from datetime import date
-
 import factory
 from factory.fuzzy import FuzzyChoice, FuzzyDate
-from service.models import Pet, Gender
+from service.models import Gender, Promotion
 
 
-class PetFactory(factory.Factory):
-    """Creates fake pets that you don't have to feed"""
+class PromotionFactory(factory.Factory):
+    """Creates fake promotions that you don't have to feed"""
 
     class Meta:  # pylint: disable=too-few-public-methods
         """Maps factory to data model"""
 
-        model = Pet
+        model = Promotion
 
     id = factory.Sequence(lambda n: n)
     name = factory.Faker("first_name")

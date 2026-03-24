@@ -101,6 +101,17 @@ class TestPromotionService(TestCase):
         resp = self.client.delete("/")
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    def test_delete_a_promotion(self):
+        """It should Delete a Promotion"""
+        promotion = PromotionFactory()
+        promotion.create()
+        resp = self.client.delete(f"/promotions/{promotion.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_promotion_not_found(self):
+        """It should return 204 even when Promotion does not exist"""
+        resp = self.client.delete("/promotions/0")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
     # ----------------------------------------------------------
     # TEST READ
     # ----------------------------------------------------------

@@ -41,6 +41,15 @@ def index():
 
 
 ######################################################################
+# HEALTH CHECK
+######################################################################
+@app.route("/health")
+def health():
+    """Health check endpoint for Kubernetes"""
+    return jsonify(status="OK"), status.HTTP_200_OK
+
+
+######################################################################
 # CREATE A NEW PROMOTION
 ######################################################################
 @app.route("/promotions", methods=["POST"])
@@ -90,10 +99,9 @@ def update_promotions(promotion_id):
     return jsonify(promotion.serialize()), status.HTTP_200_OK
 
 
+######################################################################
 # DELETE A PROMOTION
 ######################################################################
-
-
 @app.route("/promotions/<int:promotion_id>", methods=["DELETE"])
 def delete_promotions(promotion_id):
     """Deletes a Promotion"""
@@ -105,10 +113,8 @@ def delete_promotions(promotion_id):
 
 
 ######################################################################
-# LIST PROMOTIONS BY TYPE
+# LIST PROMOTIONS
 ######################################################################
-
-
 @app.route("/promotions", methods=["GET"])
 def list_promotions():
     """Returns all Promotions, optionally filtered by type"""

@@ -62,27 +62,27 @@ class TestPromotionService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
-    def _create_promotions(self, count):
-        """Factory method to create promotions for testing"""
-        promotions = []
-        for i in range(count):
-            promotion = Promotion()
-            promotion.deserialize(
-                {
-                    "name": f"Promotion {i}",
-                    "description": f"Description {i}",
-                    "promo_code": f"SAVE{i}",
-                    "discount_amount": 10.0 + i,
-                    "promotion_type": "percentage",
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-12-31",
-                    "is_active": True,
-                    "product_id": i + 1,
-                }
-            )
-            promotion.create()
-            promotions.append(promotion)
-        return promotions
+    # def _create_promotions(self, count):
+    #     """Factory method to create promotions for testing"""
+    #     promotions = []
+    #     for i in range(count):
+    #         promotion = Promotion()
+    #         promotion.deserialize(
+    #             {
+    #                 "name": f"Promotion {i}",
+    #                 "description": f"Description {i}",
+    #                 "promo_code": f"SAVE{i}",
+    #                 "discount_amount": 10.0 + i,
+    #                 "promotion_type": "percentage",
+    #                 "start_date": "2024-01-01",
+    #                 "end_date": "2024-12-31",
+    #                 "is_active": True,
+    #                 "product_id": i + 1,
+    #             }
+    #         )
+    #         promotion.create()
+    #         promotions.append(promotion)
+    #     return promotions
 
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
@@ -93,7 +93,6 @@ class TestPromotionService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
     def _create_promotions(self, count, promotion_type=None):
         """Factory method to create promotions in bulk"""
         promotions = []
@@ -140,7 +139,7 @@ class TestPromotionService(TestCase):
         """It should return 400 for an invalid promotion type"""
         response = self.client.get(f"{BASE_URL}?type=INVALID_TYPE")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
     # ----------------------------------------------------------
     # TEST CREATE
     # ----------------------------------------------------------
@@ -185,6 +184,7 @@ class TestPromotionService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_delete_a_promotion(self):
         """It should Delete a Promotion"""
         promotion = PromotionFactory()
@@ -196,6 +196,7 @@ class TestPromotionService(TestCase):
         """It should return 204 even when Promotion does not exist"""
         resp = self.client.delete("/promotions/0")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
     # ----------------------------------------------------------
     # TEST READ
     # ----------------------------------------------------------

@@ -63,7 +63,10 @@ def get_promotions(promotion_id):
     """Read a Promotion"""
     promotion = Promotion.find(promotion_id)
     if not promotion:
-        abort(status.HTTP_404_NOT_FOUND, f"Promotion with id '{promotion_id}' was not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Promotion with id '{promotion_id}' was not found.",
+        )
     return jsonify(promotion.serialize()), status.HTTP_200_OK
 
 
@@ -75,15 +78,22 @@ def update_promotions(promotion_id):
     """Update a Promotion"""
     promotion = Promotion.find(promotion_id)
     if not promotion:
-        abort(status.HTTP_404_NOT_FOUND, f"Promotion with id '{promotion_id}' was not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Promotion with id '{promotion_id}' was not found.",
+        )
     try:
         promotion.deserialize(request.get_json())
     except DataValidationError as error:
         abort(status.HTTP_400_BAD_REQUEST, str(error))
     promotion.update()
     return jsonify(promotion.serialize()), status.HTTP_200_OK
+
+
 # DELETE A PROMOTION
 ######################################################################
+
+
 @app.route("/promotions/<int:promotion_id>", methods=["DELETE"])
 def delete_promotions(promotion_id):
     """Deletes a Promotion"""
@@ -92,6 +102,8 @@ def delete_promotions(promotion_id):
     if promotion:
         promotion.delete()
     return "", status.HTTP_204_NO_CONTENT
+
+
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
@@ -99,6 +111,8 @@ def delete_promotions(promotion_id):
 ######################################################################
 # LIST PROMOTIONS BY TYPE
 ######################################################################
+
+
 @app.route("/promotions", methods=["GET"])
 def list_promotions():
     """Returns all Promotions, optionally filtered by type"""

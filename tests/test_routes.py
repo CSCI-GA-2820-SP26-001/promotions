@@ -93,7 +93,6 @@ class TestPromotionService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
     def _create_promotions(self, count, promotion_type=None):
         """Factory method to create promotions in bulk"""
         promotions = []

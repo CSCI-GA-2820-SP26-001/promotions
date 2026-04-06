@@ -104,10 +104,6 @@ def delete_promotions(promotion_id):
     return "", status.HTTP_204_NO_CONTENT
 
 
-#  R E S T   A P I   E N D P O I N T S
-######################################################################
-
-# Todo: Place your REST API code here ...
 ######################################################################
 # LIST PROMOTIONS BY TYPE
 ######################################################################

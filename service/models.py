@@ -36,6 +36,7 @@ class PromotionType(Enum):
 
 
 class Promotion(db.Model):
+    # pylint: disable=too-many-instance-attributes
     """
     Class that represents a Promotion
 

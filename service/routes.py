@@ -115,23 +115,19 @@ def delete_promotions(promotion_id):
 ######################################################################
 # LIST PROMOTIONS
 ######################################################################
-@app.route("/promotions", methods=["GET"])
-def list_promotions():
-    """Returns all Promotions, optionally filtered by query parameters"""
-    app.logger.info("Request to list promotions...")
-
+def _parse_list_filters():
+    """Parse and validate query parameters for the list promotions endpoint"""
     filters = {}
 
     promotion_type = request.args.get("type")
     if promotion_type:
         try:
-            type_enum = PromotionType(promotion_type.lower())
+            filters["promotion_type"] = PromotionType(promotion_type.lower()).value
         except ValueError:
             abort(
                 status.HTTP_400_BAD_REQUEST,
                 f"Invalid promotion type: {promotion_type}",
             )
-        filters["promotion_type"] = type_enum.value
 
     name = request.args.get("name")
     if name:
@@ -155,6 +151,16 @@ def list_promotions():
                 status.HTTP_400_BAD_REQUEST,
                 f"Invalid product_id: {product_id}",
             )
+
+    return filters
+
+
+@app.route("/promotions", methods=["GET"])
+def list_promotions():
+    """Returns all Promotions, optionally filtered by query parameters"""
+    app.logger.info("Request to list promotions...")
+
+    filters = _parse_list_filters()
 
     if filters:
         app.logger.info("Filtering by: %s", filters)

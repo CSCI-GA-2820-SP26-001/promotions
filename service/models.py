@@ -189,3 +189,21 @@ class Promotion(db.Model):
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)
+
+    @classmethod
+    def find_by_filters(cls, **kwargs):
+        """Returns Promotions matching all given filters
+
+        Supported kwargs: promotion_type, name, is_active, product_id
+        """
+        logger.info("Processing filter query for %s ...", kwargs)
+        query = cls.query
+        if "promotion_type" in kwargs:
+            query = query.filter(cls.promotion_type == kwargs["promotion_type"])
+        if "name" in kwargs:
+            query = query.filter(cls.name == kwargs["name"])
+        if "is_active" in kwargs:
+            query = query.filter(cls.is_active == kwargs["is_active"])
+        if "product_id" in kwargs:
+            query = query.filter(cls.product_id == kwargs["product_id"])
+        return query

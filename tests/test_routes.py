@@ -147,6 +147,64 @@ class TestPromotionService(TestCase):
         response = self.client.get(f"{BASE_URL}?type=INVALID_TYPE")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_list_promotions_by_name(self):
+        """It should return only Promotions matching the requested name"""
+        promotions = self._create_promotions(5)
+        target_name = promotions[0].name
+        count = len([p for p in promotions if p.name == target_name])
+        response = self.client.get(f"{BASE_URL}?name={target_name}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), count)
+        for promotion in data:
+            self.assertEqual(promotion["name"], target_name)
+
+    def test_list_promotions_by_is_active(self):
+        """It should return only Promotions matching the is_active flag"""
+        promotions = self._create_promotions(10)
+        active_count = len([p for p in promotions if p.is_active])
+        response = self.client.get(f"{BASE_URL}?is_active=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), active_count)
+        for promotion in data:
+            self.assertTrue(promotion["is_active"])
+
+    def test_list_promotions_by_product_id(self):
+        """It should return only Promotions matching the product_id"""
+        promotions = self._create_promotions(5)
+        target_product_id = promotions[0].product_id
+        count = len([p for p in promotions if p.product_id == target_product_id])
+        response = self.client.get(f"{BASE_URL}?product_id={target_product_id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), count)
+        for promotion in data:
+            self.assertEqual(promotion["product_id"], target_product_id)
+
+    def test_list_promotions_multiple_filters(self):
+        """It should support combining multiple query parameters"""
+        promotions = self._create_promotions(10)
+        target = promotions[0]
+        response = self.client.get(
+            f"{BASE_URL}?type={target.promotion_type}&is_active={str(target.is_active).lower()}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        for promotion in data:
+            self.assertEqual(promotion["promotion_type"], target.promotion_type)
+            self.assertEqual(promotion["is_active"], target.is_active)
+
+    def test_list_promotions_invalid_is_active(self):
+        """It should return 400 for an invalid is_active value"""
+        response = self.client.get(f"{BASE_URL}?is_active=maybe")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_list_promotions_invalid_product_id(self):
+        """It should return 400 for a non-integer product_id"""
+        response = self.client.get(f"{BASE_URL}?product_id=abc")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     # ----------------------------------------------------------
     # TEST CREATE
     # ----------------------------------------------------------

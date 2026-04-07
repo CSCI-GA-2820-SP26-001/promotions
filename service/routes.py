@@ -117,13 +117,13 @@ def delete_promotions(promotion_id):
 ######################################################################
 @app.route("/promotions", methods=["GET"])
 def list_promotions():
-    """Returns all Promotions, optionally filtered by type"""
+    """Returns all Promotions, optionally filtered by query parameters"""
     app.logger.info("Request to list promotions...")
 
-    promotion_type = request.args.get("type")
+    filters = {}
 
+    promotion_type = request.args.get("type")
     if promotion_type:
-        app.logger.info("Filtering by type: %s", promotion_type)
         try:
             type_enum = PromotionType(promotion_type.lower())
         except ValueError:
@@ -131,7 +131,34 @@ def list_promotions():
                 status.HTTP_400_BAD_REQUEST,
                 f"Invalid promotion type: {promotion_type}",
             )
-        promotions = Promotion.find_by_type(type_enum.value)
+        filters["promotion_type"] = type_enum.value
+
+    name = request.args.get("name")
+    if name:
+        filters["name"] = name
+
+    is_active = request.args.get("is_active")
+    if is_active is not None:
+        if is_active.lower() not in ("true", "false"):
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                f"Invalid value for is_active: {is_active}",
+            )
+        filters["is_active"] = is_active.lower() == "true"
+
+    product_id = request.args.get("product_id")
+    if product_id is not None:
+        try:
+            filters["product_id"] = int(product_id)
+        except ValueError:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                f"Invalid product_id: {product_id}",
+            )
+
+    if filters:
+        app.logger.info("Filtering by: %s", filters)
+        promotions = Promotion.find_by_filters(**filters)
     else:
         promotions = Promotion.all()
 

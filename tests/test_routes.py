@@ -283,3 +283,115 @@ class TestPromotionService(TestCase):
         data = response.get_json()
         logging.debug("Response data = %s", data)
         self.assertIn("was not found", data["message"])
+        # ----------------------------------------------------------
+    # TEST CREATE
+
+    # ----------------------------------------------------------
+
+    def test_create_promotion(self):
+        """It should Create a new Promotion"""
+        test_promotion = PromotionFactory()
+        response = self.client.post(
+            BASE_URL,
+            json=test_promotion.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        new_promotion = response.get_json()
+        self.assertIsNotNone(new_promotion["id"])
+        self.assertEqual(new_promotion["name"], test_promotion.name)
+        self.assertEqual(new_promotion["promotion_type"], test_promotion.promotion_type)
+        self.assertEqual(float(new_promotion["discount_amount"]), float(test_promotion.discount_amount))
+        self.assertEqual(new_promotion["product_id"], test_promotion.product_id)
+        self.assertEqual(new_promotion["is_active"], test_promotion.is_active)
+
+    def test_create_promotion_bad_data(self):
+        """It should return 400 when creating with missing required fields"""
+        response = self.client.post(
+            BASE_URL,
+            json={"name": "Missing fields"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_promotion_persists(self):
+        """It should Create a Promotion and confirm it persists in the database"""
+        test_promotion = PromotionFactory()
+        response = self.client.post(
+            BASE_URL,
+            json=test_promotion.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        new_promotion = response.get_json()
+        promotion_id = new_promotion["id"]
+
+        get_response = self.client.get(f"{BASE_URL}/{promotion_id}")
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        retrieved = get_response.get_json()
+        self.assertEqual(retrieved["id"], promotion_id)
+        self.assertEqual(retrieved["name"], test_promotion.name)
+        self.assertEqual(retrieved["promotion_type"], test_promotion.promotion_type)
+# ----------------------------------------------------------
+    # TEST MODEL COVERAGE
+
+    # ----------------------------------------------------------
+
+    def test_repr(self):
+        """It should return a string representation of a Promotion"""
+        promotion = PromotionFactory()
+        promotion.create()
+        self.assertIn(promotion.name, repr(promotion))
+
+    def test_update_with_no_id(self):
+        """It should raise DataValidationError when updating with no ID"""
+        promotion = PromotionFactory()
+        promotion.create()
+        promotion.id = None
+        self.assertRaises(Exception, promotion.update)
+
+    def test_deserialize_with_date_objects(self):
+        """It should deserialize a Promotion with date objects instead of strings"""
+        from datetime import date
+        promotion = PromotionFactory()
+        data = promotion.serialize()
+        data["start_date"] = date.fromisoformat(data["start_date"])
+        data["end_date"] = date.fromisoformat(data["end_date"])
+        new_promotion = PromotionFactory()
+        new_promotion.deserialize(data)
+        self.assertEqual(new_promotion.start_date, data["start_date"])
+        self.assertEqual(new_promotion.end_date, data["end_date"])
+
+    def test_deserialize_invalid_is_active(self):
+        """It should raise DataValidationError when is_active is not a boolean"""
+        promotion = PromotionFactory()
+        data = promotion.serialize()
+        data["is_active"] = "yes"
+        self.assertRaises(Exception, promotion.deserialize, data)
+
+    def test_deserialize_missing_key(self):
+        """It should raise DataValidationError when a required key is missing"""
+        promotion = PromotionFactory()
+        data = promotion.serialize()
+        del data["name"]
+        self.assertRaises(Exception, promotion.deserialize, data)
+
+    def test_find_by_type(self):
+        """It should find Promotions by type"""
+        promotions = self._create_promotions(5)
+        target_type = promotions[0].promotion_type
+        from service.models import Promotion
+        results = Promotion.find_by_type(target_type).all()
+        self.assertGreater(len(results), 0)
+        for p in results:
+            self.assertEqual(p.promotion_type, target_type)
+
+    def test_find_by_name(self):
+        """It should find Promotions by name"""
+        promotions = self._create_promotions(5)
+        target_name = promotions[0].name
+        from service.models import Promotion
+        results = Promotion.find_by_name(target_name).all()
+        self.assertGreater(len(results), 0)
+        for p in results:
+            self.assertEqual(p.name, target_name)

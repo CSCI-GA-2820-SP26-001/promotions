@@ -285,7 +285,9 @@ class TestPromotionService(TestCase):
         self.assertIn("was not found", data["message"])
         # ----------------------------------------------------------
     # TEST CREATE
+
     # ----------------------------------------------------------
+
     def test_create_promotion(self):
         """It should Create a new Promotion"""
         test_promotion = PromotionFactory()
@@ -332,7 +334,9 @@ class TestPromotionService(TestCase):
         self.assertEqual(retrieved["promotion_type"], test_promotion.promotion_type)
 # ----------------------------------------------------------
     # TEST MODEL COVERAGE
+
     # ----------------------------------------------------------
+
     def test_repr(self):
         """It should return a string representation of a Promotion"""
         promotion = PromotionFactory()

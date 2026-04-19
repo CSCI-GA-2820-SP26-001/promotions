@@ -19,7 +19,7 @@ Promotion Service
 This service implements a REST API that allows you to Create, Read, Update
 and Delete Promotion
 """
-from flask import jsonify, request, abort
+from flask import jsonify, request, abort, send_from_directory
 from flask import current_app as app
 from service.models import Promotion, DataValidationError, PromotionType
 from service.common import status
@@ -30,14 +30,8 @@ from service.common import status
 ######################################################################
 @app.route("/")
 def index():
-    """Root URL response"""
-    return (
-        jsonify(
-            name="Promotion REST API Service",
-            version="1.0",
-        ),
-        status.HTTP_200_OK,
-    )
+    """Serve admin UI"""
+    return send_from_directory(app.static_folder, "index.html")
 
 
 ######################################################################

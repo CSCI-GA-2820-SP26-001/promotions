@@ -11,7 +11,7 @@
   <body>
     <div class="container">
       <div class="page-header">
-          <h1>Promotion REST API Service</h1>
+        <h1>Promotion REST API Service</h1>
       </div>
 
       <!-- Flash Message -->
@@ -21,91 +21,190 @@
         </table>
       </div>
 
-      <!-- FORM -->
-      <div class="col-md-12" id="form_data">
-        <h3>Create, Retrieve, Update, and Delete a Promotion:</h3>
+      <!-- ================================================ -->
+      <!-- Query / Filter Section                           -->
+      <!-- ================================================ -->
+      <div class="col-md-12">
+        <h3>Query / Filter Promotions</h3>
         <div class="well">
           <div class="form-horizontal">
+
             <div class="form-group">
-              <label class="control-label col-sm-2" for="pet_id">Promotion ID:</label>
-              <div class="col-sm-6">
-                <input type="text" class="form-control" id="pet_id" placeholder="Enter ID of Promotion">
-              </div>
-              <div class="col-sm-4">
-                <button type="submit" class="btn btn-primary" id="retrieve-btn">Retrieve</button>
-                <button type="submit" class="btn btn-danger" id="delete-btn">Delete</button>
+              <label class="control-label col-sm-2" for="filter_name">Name:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="filter_name" placeholder="Filter by name">
               </div>
             </div>
-          </div> <!-- form horizontal -->
 
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="filter_type">Promotion Type:</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="filter_type">
+                  <option value="">Any</option>
+                  <option value="percentage">percentage</option>
+                  <option value="fixed_amount">fixed_amount</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="filter_is_active">Active:</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="filter_is_active">
+                  <option value="">Any</option>
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="filter_product_id">Product ID:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="filter_product_id" placeholder="Filter by product ID">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="button" class="btn btn-primary" id="search-btn">Search</button>
+                <button type="button" class="btn btn-default" id="clear-filters-btn">Clear Filters</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================ -->
+      <!-- Search Results Table                             -->
+      <!-- ================================================ -->
+      <div class="col-md-12">
+        <h4>Results <small>Click a row to load it into the edit form below</small></h4>
+        <div class="table-responsive" id="search_results">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th class="col-md-1">ID</th>
+                <th class="col-md-2">Name</th>
+                <th class="col-md-2">Type</th>
+                <th class="col-md-1">Active</th>
+                <th class="col-md-1">Product</th>
+                <th class="col-md-2">Start</th>
+                <th class="col-md-2">End</th>
+              </tr>
+            </thead>
+            <tbody id="search_results_body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================================================ -->
+      <!-- Create / Retrieve / Update / Delete Section      -->
+      <!-- ================================================ -->
+      <div class="col-md-12" id="crud-section">
+        <h3>Create, Retrieve, Update, and Delete a Promotion</h3>
+        <div class="well">
+
+          <!-- ID row with Retrieve / Delete -->
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="promotion_id">Promotion ID:</label>
+              <div class="col-sm-6">
+                <input type="text" class="form-control" id="promotion_id"
+                       placeholder="Select a row above or enter ID manually">
+              </div>
+              <div class="col-sm-4">
+                <button type="button" class="btn btn-primary" id="retrieve-btn">Retrieve</button>
+                <button type="button" class="btn btn-danger"  id="delete-btn">Delete</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Editable fields -->
           <div class="form-horizontal">
 
             <!-- NAME -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="pet_name">Name:</label>
+              <label class="control-label col-sm-2" for="promotion_name">
+                Name: <span class="text-danger">*</span>
+              </label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="pet_name" placeholder="Enter name for Promotion">
+                <input type="text" class="form-control" id="promotion_name"
+                       placeholder="Promotion name (required)">
               </div>
             </div>
 
-            <!-- DESCRIPTION (id pet_category) -->
+            <!-- DESCRIPTION -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="pet_category">Description:</label>
+              <label class="control-label col-sm-2" for="promotion_description">Description:</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="pet_category" placeholder="Enter description">
+                <input type="text" class="form-control" id="promotion_description"
+                       placeholder="Optional description">
               </div>
             </div>
 
             <!-- PROMO CODE -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="promo_code">Promo code:</label>
+              <label class="control-label col-sm-2" for="promotion_promo_code">Promo Code:</label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" id="promo_code" placeholder="Enter promo code">
+                <input type="text" class="form-control" id="promotion_promo_code"
+                       placeholder="Optional promo code">
               </div>
             </div>
 
             <!-- DISCOUNT AMOUNT -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="discount_amount">Discount amount:</label>
+              <label class="control-label col-sm-2" for="promotion_discount_amount">
+                Discount Amount: <span class="text-danger">*</span>
+              </label>
               <div class="col-sm-10">
-                <input type="number" step="0.01" class="form-control" id="discount_amount" placeholder="0.00">
+                <input type="number" step="0.01" min="0" class="form-control"
+                       id="promotion_discount_amount" placeholder="0.00 (required)">
               </div>
             </div>
 
-            <!-- PROMOTION TYPE (id pet_gender) -->
+            <!-- PROMOTION TYPE -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="pet_gender">Promotion type:</label>
+              <label class="control-label col-sm-2" for="promotion_type">
+                Promotion Type: <span class="text-danger">*</span>
+              </label>
               <div class="col-sm-10">
-                <select class="form-control" id="pet_gender">
-                  <option value="">Any</option>
+                <select class="form-control" id="promotion_type">
                   <option value="percentage" selected>percentage</option>
                   <option value="fixed_amount">fixed_amount</option>
                 </select>
               </div>
             </div>
 
-            <!-- START DATE (id pet_birthday) -->
+            <!-- START DATE -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="pet_birthday">Start date:</label>
+              <label class="control-label col-sm-2" for="promotion_start_date">
+                Start Date: <span class="text-danger">*</span>
+              </label>
               <div class="col-sm-10">
-                <input type="date" class="form-control" id="pet_birthday" placeholder="2020-04-01">
+                <input type="date" class="form-control" id="promotion_start_date">
               </div>
             </div>
 
             <!-- END DATE -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="end_date">End date:</label>
+              <label class="control-label col-sm-2" for="promotion_end_date">
+                End Date: <span class="text-danger">*</span>
+              </label>
               <div class="col-sm-10">
-                <input type="date" class="form-control" id="end_date" placeholder="2020-12-31">
+                <input type="date" class="form-control" id="promotion_end_date">
               </div>
             </div>
 
-            <!-- IS_ACTIVE (id pet_available) -->
+            <!-- IS ACTIVE -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="pet_available">Active:</label>
+              <label class="control-label col-sm-2" for="promotion_is_active">
+                Active: <span class="text-danger">*</span>
+              </label>
               <div class="col-sm-10">
-                <select class="form-control" id="pet_available">
-                  <option value="">Any</option>
+                <select class="form-control" id="promotion_is_active">
                   <option value="true" selected>True</option>
                   <option value="false">False</option>
                 </select>
@@ -114,57 +213,39 @@
 
             <!-- PRODUCT ID -->
             <div class="form-group">
-              <label class="control-label col-sm-2" for="product_id">Product ID:</label>
+              <label class="control-label col-sm-2" for="promotion_product_id">
+                Product ID: <span class="text-danger">*</span>
+              </label>
               <div class="col-sm-10">
-                <input type="number" class="form-control" id="product_id" placeholder="1">
+                <input type="number" class="form-control" id="promotion_product_id"
+                       placeholder="Product ID (required)">
               </div>
             </div>
 
-
-            <!-- SUBMIT BUTTONS -->
+            <!-- ACTION BUTTONS -->
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-primary" id="search-btn">Search</button>
-                <button type="submit" class="btn btn-primary" id="clear-btn">Clear</button>
-                <button type="submit" class="btn btn-success" id="create-btn">Create</button>
-                <button type="submit" class="btn btn-warning" id="update-btn">Update</button>
-                <button type="submit" class="btn btn-success" id="activate-btn">Activate</button>
-                <button type="submit" class="btn btn-default" id="deactivate-btn">Deactivate</button>
+                <button type="button" class="btn btn-success" id="create-btn">Create</button>
+                <button type="button" class="btn btn-warning" id="update-btn">Update</button>
+                <button type="button" class="btn btn-success" id="activate-btn">Activate</button>
+                <button type="button" class="btn btn-default" id="deactivate-btn">Deactivate</button>
+                <button type="button" class="btn btn-default" id="clear-btn">Clear</button>
               </div>
             </div>
-          </div> <!-- form horizontal -->
-        </div> <!-- end well -->
-      </div> <!-- end Form -->
 
-      <!-- Search Results -->
-      <div class="table-responsive col-md-12" id="search_results">
-        <table class="table table-striped">
-          <thead>
-          <tr>
-            <th class="col-md-1">ID</th>
-            <th class="col-md-2">Name</th>
-            <th class="col-md-2">Type</th>
-            <th class="col-md-1">Active</th>
-            <th class="col-md-1">Product</th>
-            <th class="col-md-2">Start</th>
-            <th class="col-md-2">End</th>
-          </tr>
-          </thead>
-        </table>
-      </div>
+          </div><!-- /form-horizontal -->
+        </div><!-- /well -->
+      </div><!-- /crud-section -->
 
       <footer>
         <br><br>
         <p>&copy; NYU DevOps Company 2022</p>
       </footer>
 
-    </div> <!-- container -->
+    </div><!-- /container -->
 
-  <script type="text/javascript" src = "static/js/jquery-3.6.0.min.js"></script>
-  <script type="text/javascript" src = "static/js/bootstrap.min.js"></script>
-
-  <!-- YOUR REST API -->
-  <script type="text/javascript" src="static/js/rest_api.js"></script>
-
+    <script type="text/javascript" src="static/js/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="static/js/rest_api.js"></script>
   </body>
 </html>

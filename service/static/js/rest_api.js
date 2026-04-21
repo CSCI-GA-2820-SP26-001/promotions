@@ -8,331 +8,339 @@ $(function () {
         if (res.responseJSON && res.responseJSON.message) {
             return res.responseJSON.message;
         }
-        return "Error";
+        return "An unexpected error occurred.";
     }
 
+    function flash_message(message) {
+        $("#flash_message").empty().append(message);
+    }
+
+    // Build promotion object from the CRUD form fields
     function promotion_from_form() {
-        let desc = $("#pet_category").val();
-        let promo = $("#promo_code").val();
-        let av = $("#pet_available").val();
+        let desc = $("#promotion_description").val().trim();
+        let promo = $("#promotion_promo_code").val().trim();
+        let av = $("#promotion_is_active").val();
         return {
-            "name": $("#pet_name").val(),
-            "description": desc === "" ? null : desc,
-            "promo_code": promo === "" ? null : promo,
-            "discount_amount": parseFloat($("#discount_amount").val()),
-            "promotion_type": $("#pet_gender").val(),
-            "start_date": $("#pet_birthday").val(),
-            "end_date": $("#end_date").val(),
-            "is_active": av === "" ? true : (av == "true"),
-            "product_id": parseInt($("#product_id").val(), 10)
+            "name":             $("#promotion_name").val().trim(),
+            "description":      desc  === "" ? null : desc,
+            "promo_code":       promo === "" ? null : promo,
+            "discount_amount":  parseFloat($("#promotion_discount_amount").val()),
+            "promotion_type":   $("#promotion_type").val(),
+            "start_date":       $("#promotion_start_date").val(),
+            "end_date":         $("#promotion_end_date").val(),
+            "is_active":        av === "true",
+            "product_id":       parseInt($("#promotion_product_id").val(), 10)
         };
     }
 
-    // Updates the form with data from the response
+    // Validate the CRUD form; returns the data object or null on failure
+    function validate_form() {
+        let data = promotion_from_form();
+
+        if (!data.name) {
+            flash_message("Name is required.");
+            return null;
+        }
+        if (!data.promotion_type) {
+            flash_message("Promotion type is required.");
+            return null;
+        }
+        if (isNaN(data.discount_amount) || data.discount_amount < 0) {
+            flash_message("Enter a valid discount amount (0 or greater).");
+            return null;
+        }
+        if (!data.start_date) {
+            flash_message("Start date is required.");
+            return null;
+        }
+        if (!data.end_date) {
+            flash_message("End date is required.");
+            return null;
+        }
+        if (data.end_date < data.start_date) {
+            flash_message("End date must be on or after start date.");
+            return null;
+        }
+        if (isNaN(data.product_id) || data.product_id <= 0) {
+            flash_message("Enter a valid Product ID (positive integer).");
+            return null;
+        }
+        return data;
+    }
+
+    // Populate the CRUD form from a promotion object
     function update_form_data(res) {
-        $("#pet_id").val(res.id);
-        $("#pet_name").val(res.name);
-        $("#pet_category").val(res.description === null ? "" : res.description);
-        $("#promo_code").val(res.promo_code === null ? "" : res.promo_code);
-        $("#discount_amount").val(res.discount_amount);
-        $("#pet_gender").val(res.promotion_type);
-        $("#pet_birthday").val(res.start_date.substring(0, 10));
-        $("#end_date").val(res.end_date.substring(0, 10));
-        if (res.is_active == true) {
-            $("#pet_available").val("true");
-        } else {
-            $("#pet_available").val("false");
-        }
-        $("#product_id").val(res.product_id);
+        $("#promotion_id").val(res.id);
+        $("#promotion_name").val(res.name);
+        $("#promotion_description").val(res.description === null ? "" : res.description);
+        $("#promotion_promo_code").val(res.promo_code === null ? "" : res.promo_code);
+        $("#promotion_discount_amount").val(res.discount_amount);
+        $("#promotion_type").val(res.promotion_type);
+        $("#promotion_start_date").val(res.start_date.substring(0, 10));
+        $("#promotion_end_date").val(res.end_date.substring(0, 10));
+        $("#promotion_is_active").val(res.is_active ? "true" : "false");
+        $("#promotion_product_id").val(res.product_id);
     }
 
-    /// Clears all form fields
+    // Clear all CRUD form fields
     function clear_form_data() {
-        $("#pet_name").val("");
-        $("#pet_category").val("");
-        $("#promo_code").val("");
-        $("#discount_amount").val("");
-        $("#pet_gender").val("percentage");
-        $("#pet_birthday").val("");
-        $("#end_date").val("");
-        $("#pet_available").val("true");
-        $("#product_id").val("");
+        $("#promotion_id").val("");
+        $("#promotion_name").val("");
+        $("#promotion_description").val("");
+        $("#promotion_promo_code").val("");
+        $("#promotion_discount_amount").val("");
+        $("#promotion_type").val("percentage");
+        $("#promotion_start_date").val("");
+        $("#promotion_end_date").val("");
+        $("#promotion_is_active").val("true");
+        $("#promotion_product_id").val("");
     }
 
-    // Updates the flash message area
-    function flash_message(message) {
-        $("#flash_message").empty();
-        $("#flash_message").append(message);
+    // Render the results table; each row is clickable and loads the promotion into the CRUD form
+    function render_results(data) {
+        let tbody = $("#search_results_body");
+        tbody.empty();
+
+        if (data.length === 0) {
+            tbody.append(
+                '<tr><td colspan="7" class="text-center text-muted">' +
+                'No promotions found matching your criteria.</td></tr>'
+            );
+            return;
+        }
+
+        for (let i = 0; i < data.length; i++) {
+            let p = data[i];
+            let row = $([
+                '<tr style="cursor:pointer;" title="Click to load into the edit form below">',
+                '<td>', p.id,             '</td>',
+                '<td>', p.name,           '</td>',
+                '<td>', p.promotion_type, '</td>',
+                '<td>', p.is_active,      '</td>',
+                '<td>', p.product_id,     '</td>',
+                '<td>', p.start_date,     '</td>',
+                '<td>', p.end_date,       '</td>',
+                '</tr>'
+            ].join(""));
+
+            // Store the full promotion object on the row element
+            row.data("promotion", p);
+
+            row.click(function () {
+                update_form_data($(this).data("promotion"));
+                flash_message("Promotion loaded into the form. Edit the fields and click Update.");
+                $("html, body").animate({ scrollTop: $("#crud-section").offset().top }, 400);
+            });
+
+            tbody.append(row);
+        }
     }
 
     // ****************************************
-    // Create a Promotion
-    // ****************************************
-
-    $("#create-btn").click(function () {
-
-        let data = promotion_from_form();
-        if (!data.promotion_type) {
-            flash_message("Select a promotion type (not Any)");
-            return;
-        }
-        if (isNaN(data.discount_amount) || isNaN(data.product_id)) {
-            flash_message("Enter valid discount amount and product ID");
-            return;
-        }
-
-        $("#flash_message").empty();
-
-        let ajax = $.ajax({
-            type: "POST",
-            url: "/promotions",
-            contentType: "application/json",
-            data: JSON.stringify(data),
-        });
-
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(err_msg(res))
-        });
-    });
-
-
-    // ****************************************
-    // Update a Promotion
-    // ****************************************
-
-    $("#update-btn").click(function () {
-
-        let pet_id = $("#pet_id").val();
-        let data = promotion_from_form();
-        if (!data.promotion_type) {
-            flash_message("Select a promotion type (not Any)");
-            return;
-        }
-        if (isNaN(data.discount_amount) || isNaN(data.product_id)) {
-            flash_message("Enter valid discount amount and product ID");
-            return;
-        }
-
-        $("#flash_message").empty();
-
-        let ajax = $.ajax({
-                type: "PUT",
-                url: `/promotions/${pet_id}`,
-                contentType: "application/json",
-                data: JSON.stringify(data)
-            })
-
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            flash_message(err_msg(res))
-        });
-
-    });
-
-    // ****************************************
-    // Retrieve a Promotion
-    // ****************************************
-
-    $("#retrieve-btn").click(function () {
-
-        let pet_id = $("#pet_id").val();
-
-        $("#flash_message").empty();
-
-        let ajax = $.ajax({
-            type: "GET",
-            url: `/promotions/${pet_id}`,
-            contentType: "application/json",
-            data: ''
-        })
-
-        ajax.done(function(res){
-            update_form_data(res)
-            flash_message("Success")
-        });
-
-        ajax.fail(function(res){
-            clear_form_data()
-            flash_message(err_msg(res))
-        });
-
-    });
-
-    // ****************************************
-    // Delete a Promotion
-    // ****************************************
-
-    $("#delete-btn").click(function () {
-
-        let pet_id = $("#pet_id").val();
-
-        $("#flash_message").empty();
-
-        let ajax = $.ajax({
-            type: "DELETE",
-            url: `/promotions/${pet_id}`,
-            contentType: "application/json",
-            data: '',
-        })
-
-        ajax.done(function(res){
-            clear_form_data()
-            flash_message("Promotion has been Deleted!")
-        });
-
-        ajax.fail(function(res){
-            flash_message("Server error!")
-        });
-    });
-
-    // ****************************************
-    // Clear the form
-    // ****************************************
-
-    $("#clear-btn").click(function () {
-        $("#pet_id").val("");
-        $("#flash_message").empty();
-        clear_form_data()
-    });
-
-    // ****************************************
-    // Search for Promotions
+    //  Q U E R Y   /   F I L T E R
     // ****************************************
 
     $("#search-btn").click(function () {
+        let name       = $("#filter_name").val().trim();
+        let typeVal    = $("#filter_type").val();
+        let is_active  = $("#filter_is_active").val();
+        let product_id = $("#filter_product_id").val().trim();
 
-        let name = $("#pet_name").val();
-        let typeVal = $("#pet_gender").val();
-        let is_active = $("#pet_available").val();
-        let product_id = $("#product_id").val();
-
-        let queryString = ""
-
-        if (name) {
-            queryString += 'name=' + encodeURIComponent(name)
-        }
-        if (typeVal) {
-            if (queryString.length > 0) {
-                queryString += '&type=' + encodeURIComponent(typeVal)
-            } else {
-                queryString += 'type=' + encodeURIComponent(typeVal)
-            }
-        }
-        if (is_active !== "") {
-            if (queryString.length > 0) {
-                queryString += '&is_active=' + encodeURIComponent(is_active)
-            } else {
-                queryString += 'is_active=' + encodeURIComponent(is_active)
-            }
-        }
-        if (product_id) {
-            if (queryString.length > 0) {
-                queryString += '&product_id=' + encodeURIComponent(product_id)
-            } else {
-                queryString += 'product_id=' + encodeURIComponent(product_id)
-            }
+        // Validate filter inputs
+        if (product_id && isNaN(parseInt(product_id, 10))) {
+            flash_message("Product ID filter must be a valid number.");
+            return;
         }
 
-        $("#flash_message").empty();
+        let params = [];
+        if (name)       params.push("name="       + encodeURIComponent(name));
+        if (typeVal)    params.push("type="        + encodeURIComponent(typeVal));
+        if (is_active !== "") params.push("is_active=" + encodeURIComponent(is_active));
+        if (product_id) params.push("product_id=" + encodeURIComponent(product_id));
 
-        let listUrl = queryString ? `/promotions?${queryString}` : "/promotions";
+        let url = params.length > 0 ? "/promotions?" + params.join("&") : "/promotions";
 
-        let ajax = $.ajax({
+        flash_message("Searching...");
+
+        $.ajax({
             type: "GET",
-            url: listUrl,
+            url: url,
             contentType: "application/json",
-            data: ''
-        })
-
-        ajax.done(function(res){
-            $("#search_results").empty();
-            let table = '<table class="table table-striped" cellpadding="10">'
-            table += '<thead><tr>'
-            table += '<th class="col-md-1">ID</th>'
-            table += '<th class="col-md-2">Name</th>'
-            table += '<th class="col-md-2">Type</th>'
-            table += '<th class="col-md-1">Active</th>'
-            table += '<th class="col-md-1">Product</th>'
-            table += '<th class="col-md-2">Start</th>'
-            table += '<th class="col-md-2">End</th>'
-            table += '</tr></thead><tbody>'
-            let firstPet = "";
-            for(let i = 0; i < res.length; i++) {
-                let p = res[i];
-                table +=  `<tr id="row_${i}"><td>${p.id}</td><td>${p.name}</td><td>${p.promotion_type}</td><td>${p.is_active}</td><td>${p.product_id}</td><td>${p.start_date}</td><td>${p.end_date}</td></tr>`;
-                if (i == 0) {
-                    firstPet = p;
-                }
+            data: ""
+        }).done(function (res) {
+            render_results(res);
+            if (res.length === 0) {
+                flash_message("No promotions found matching your criteria.");
+            } else {
+                flash_message("Found " + res.length + " promotion(s). Click a row to edit it.");
             }
-            table += '</tbody></table>';
-            $("#search_results").append(table);
-
-            if (firstPet != "") {
-                update_form_data(firstPet)
-            }
-
-            flash_message("Success")
+        }).fail(function (res) {
+            flash_message("Query failed: " + err_msg(res));
         });
+    });
 
-        ajax.fail(function(res){
-            flash_message(err_msg(res))
-        });
-
+    // Clear only the query filter fields
+    $("#clear-filters-btn").click(function () {
+        $("#filter_name").val("");
+        $("#filter_type").val("");
+        $("#filter_is_active").val("");
+        $("#filter_product_id").val("");
+        flash_message("");
     });
 
     // ****************************************
-    // Activate / Deactivate Promotion
+    //  C R E A T E
     // ****************************************
 
-    function put_is_active(flag) {
-        let pet_id = $("#pet_id").val();
-        if (!pet_id) {
-            flash_message("Enter promotion ID");
+    $("#create-btn").click(function () {
+        let data = validate_form();
+        if (!data) return;
+
+        flash_message("");
+
+        $.ajax({
+            type: "POST",
+            url: "/promotions",
+            contentType: "application/json",
+            data: JSON.stringify(data)
+        }).done(function (res) {
+            update_form_data(res);
+            flash_message("Promotion '" + res.name + "' created successfully.");
+        }).fail(function (res) {
+            flash_message("Create failed: " + err_msg(res));
+        });
+    });
+
+    // ****************************************
+    //  U P D A T E
+    // ****************************************
+
+    $("#update-btn").click(function () {
+        let promotion_id = $("#promotion_id").val().trim();
+        if (!promotion_id) {
+            flash_message("Promotion ID is required to update. Select a row from the results or retrieve a promotion first.");
             return;
         }
-        $("#flash_message").empty();
-        let ajax = $.ajax({
-            type: "GET",
-            url: `/promotions/${pet_id}`,
+
+        let data = validate_form();
+        if (!data) return;
+
+        flash_message("");
+
+        $.ajax({
+            type: "PUT",
+            url: "/promotions/" + promotion_id,
             contentType: "application/json",
-            data: ''
+            data: JSON.stringify(data)
+        }).done(function (res) {
+            update_form_data(res);
+            flash_message("Promotion '" + res.name + "' updated successfully.");
+        }).fail(function (res) {
+            flash_message("Update failed: " + err_msg(res));
         });
-        ajax.done(function(res){
+    });
+
+    // ****************************************
+    //  R E T R I E V E
+    // ****************************************
+
+    $("#retrieve-btn").click(function () {
+        let promotion_id = $("#promotion_id").val().trim();
+        if (!promotion_id) {
+            flash_message("Enter a Promotion ID to retrieve.");
+            return;
+        }
+
+        flash_message("");
+
+        $.ajax({
+            type: "GET",
+            url: "/promotions/" + promotion_id,
+            contentType: "application/json",
+            data: ""
+        }).done(function (res) {
+            update_form_data(res);
+            flash_message("Promotion '" + res.name + "' loaded.");
+        }).fail(function (res) {
+            clear_form_data();
+            flash_message("Retrieve failed: " + err_msg(res));
+        });
+    });
+
+    // ****************************************
+    //  D E L E T E
+    // ****************************************
+
+    $("#delete-btn").click(function () {
+        let promotion_id = $("#promotion_id").val().trim();
+        if (!promotion_id) {
+            flash_message("Enter a Promotion ID to delete.");
+            return;
+        }
+
+        flash_message("");
+
+        $.ajax({
+            type: "DELETE",
+            url: "/promotions/" + promotion_id,
+            contentType: "application/json",
+            data: ""
+        }).done(function () {
+            clear_form_data();
+            flash_message("Promotion deleted successfully.");
+        }).fail(function (res) {
+            flash_message("Delete failed: " + err_msg(res));
+        });
+    });
+
+    // ****************************************
+    //  C L E A R   F O R M
+    // ****************************************
+
+    $("#clear-btn").click(function () {
+        clear_form_data();
+        flash_message("");
+    });
+
+    // ****************************************
+    //  A C T I V A T E  /  D E A C T I V A T E
+    // ****************************************
+
+    function set_active(flag) {
+        let promotion_id = $("#promotion_id").val().trim();
+        if (!promotion_id) {
+            flash_message("Enter or select a Promotion ID first.");
+            return;
+        }
+
+        flash_message("");
+
+        // Fetch current data, flip is_active, then PUT
+        $.ajax({
+            type: "GET",
+            url: "/promotions/" + promotion_id,
+            contentType: "application/json",
+            data: ""
+        }).done(function (res) {
             res.is_active = flag;
-            let putAjax = $.ajax({
+            $.ajax({
                 type: "PUT",
-                url: `/promotions/${pet_id}`,
+                url: "/promotions/" + promotion_id,
                 contentType: "application/json",
                 data: JSON.stringify(res)
-            });
-            putAjax.done(function(r){
+            }).done(function (r) {
                 update_form_data(r);
-                flash_message("Success");
+                let action = flag ? "activated" : "deactivated";
+                flash_message("Promotion '" + r.name + "' " + action + " successfully.");
+            }).fail(function (res) {
+                flash_message("Action failed: " + err_msg(res));
             });
-            putAjax.fail(function(res){
-                flash_message(err_msg(res));
-            });
-        });
-        ajax.fail(function(res){
-            flash_message(err_msg(res));
+        }).fail(function (res) {
+            flash_message("Could not load promotion: " + err_msg(res));
         });
     }
 
-    $("#activate-btn").click(function () {
-        put_is_active(true);
-    });
+    $("#activate-btn").click(function ()   { set_active(true);  });
+    $("#deactivate-btn").click(function () { set_active(false); });
 
-    $("#deactivate-btn").click(function () {
-        put_is_active(false);
-    });
-
-})
+});

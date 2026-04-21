@@ -57,6 +57,12 @@ $(function () {
         $("#end_date").val("");
         $("#pet_available").val("true");
         $("#product_id").val("");
+
+        // Reset toggle buttons
+        $("#active-true").addClass("active");
+        $("#active-false").removeClass("active");
+        $("#type-percentage").addClass("active");
+        $("#type-fixed").removeClass("active");
     }
 
     // Updates the flash message area
@@ -66,18 +72,81 @@ $(function () {
     }
 
     // ****************************************
+    // Validation Functions
+    // ****************************************
+
+    function validate_required_fields(fields) {
+        for (let field of fields) {
+            if (!field.value || field.value.trim() === "") {
+                return "Please fill in all required fields: " + field.label;
+            }
+        }
+        return null;
+    }
+
+    function validate_numeric_field(value, fieldName) {
+        if (isNaN(value) || value === "") {
+            return `Please enter a valid ${fieldName}`;
+        }
+        return null;
+    }
+
+    // ****************************************
     // Create a Promotion
     // ****************************************
 
     $("#create-btn").click(function () {
 
         let data = promotion_from_form();
+        
+        // Validate required fields
+        let requiredFields = [
+            { value: $("#pet_name").val(), label: "Name" },
+            { value: $("#discount_amount").val(), label: "Discount Amount" },
+            { value: $("#pet_birthday").val(), label: "Start Date" },
+            { value: $("#end_date").val(), label: "End Date" }
+        ];
+
+        let validationError = validate_required_fields(requiredFields);
+        if (validationError) {
+            flash_message(validationError);
+            return;
+        }
+
+        // Validate promotion type
         if (!data.promotion_type) {
             flash_message("Select a promotion type (not Any)");
             return;
         }
-        if (isNaN(data.discount_amount) || isNaN(data.product_id)) {
-            flash_message("Enter valid discount amount and product ID");
+
+        // Validate numeric fields
+        let discountError = validate_numeric_field(data.discount_amount, "discount amount");
+        if (discountError) {
+            flash_message(discountError);
+            return;
+        }
+
+        let productIdError = validate_numeric_field(data.product_id, "product ID");
+        if (productIdError) {
+            flash_message(productIdError);
+            return;
+        }
+
+        // Validate discount amount is positive
+        if (data.discount_amount <= 0) {
+            flash_message("Discount amount must be greater than 0");
+            return;
+        }
+
+        // Validate product ID is positive
+        if (data.product_id <= 0) {
+            flash_message("Product ID must be greater than 0");
+            return;
+        }
+
+        // Validate date range
+        if (new Date(data.start_date) >= new Date(data.end_date)) {
+            flash_message("Start date must be before end date");
             return;
         }
 
@@ -108,13 +177,63 @@ $(function () {
     $("#update-btn").click(function () {
 
         let pet_id = $("#pet_id").val();
+        
+        // Validate ID is provided
+        if (!pet_id || pet_id.trim() === "") {
+            flash_message("Please enter a Promotion ID to update");
+            return;
+        }
+
         let data = promotion_from_form();
+        
+        // Validate required fields
+        let requiredFields = [
+            { value: $("#pet_name").val(), label: "Name" },
+            { value: $("#discount_amount").val(), label: "Discount Amount" },
+            { value: $("#pet_birthday").val(), label: "Start Date" },
+            { value: $("#end_date").val(), label: "End Date" }
+        ];
+
+        let validationError = validate_required_fields(requiredFields);
+        if (validationError) {
+            flash_message(validationError);
+            return;
+        }
+
+        // Validate promotion type
         if (!data.promotion_type) {
             flash_message("Select a promotion type (not Any)");
             return;
         }
-        if (isNaN(data.discount_amount) || isNaN(data.product_id)) {
-            flash_message("Enter valid discount amount and product ID");
+
+        // Validate numeric fields
+        let discountError = validate_numeric_field(data.discount_amount, "discount amount");
+        if (discountError) {
+            flash_message(discountError);
+            return;
+        }
+
+        let productIdError = validate_numeric_field(data.product_id, "product ID");
+        if (productIdError) {
+            flash_message(productIdError);
+            return;
+        }
+
+        // Validate discount amount is positive
+        if (data.discount_amount <= 0) {
+            flash_message("Discount amount must be greater than 0");
+            return;
+        }
+
+        // Validate product ID is positive
+        if (data.product_id <= 0) {
+            flash_message("Product ID must be greater than 0");
+            return;
+        }
+
+        // Validate date range
+        if (new Date(data.start_date) >= new Date(data.end_date)) {
+            flash_message("Start date must be before end date");
             return;
         }
 
@@ -146,6 +265,18 @@ $(function () {
 
         let pet_id = $("#pet_id").val();
 
+        // Validate ID is provided
+        if (!pet_id || pet_id.trim() === "") {
+            flash_message("Please enter a Promotion ID to retrieve");
+            return;
+        }
+
+        // Validate ID is numeric
+        if (isNaN(pet_id)) {
+            flash_message("Promotion ID must be a valid number");
+            return;
+        }
+
         $("#flash_message").empty();
 
         let ajax = $.ajax({
@@ -174,6 +305,18 @@ $(function () {
     $("#delete-btn").click(function () {
 
         let pet_id = $("#pet_id").val();
+
+        // Validate ID is provided
+        if (!pet_id || pet_id.trim() === "") {
+            flash_message("Please enter a Promotion ID to delete");
+            return;
+        }
+
+        // Validate ID is numeric
+        if (isNaN(pet_id)) {
+            flash_message("Promotion ID must be a valid number");
+            return;
+        }
 
         $("#flash_message").empty();
 

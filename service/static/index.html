@@ -355,40 +355,6 @@
         min-width: 120px;
         text-align: center;
       }
-
-      /* Main content wrapper for side-by-side layout */
-      .content-wrapper {
-        display: flex;
-        gap: 30px;
-        align-items: flex-start;
-      }
-
-      .form-wrapper {
-        flex: 0 0 45%;
-        min-width: 350px;
-      }
-
-      .table-wrapper {
-        flex: 0 0 55%;
-        min-width: 400px;
-      }
-
-      @media (max-width: 1200px) {
-        .content-wrapper {
-          flex-direction: column;
-          gap: 30px;
-        }
-
-        .form-wrapper {
-          flex: 1;
-          width: 100%;
-        }
-
-        .table-wrapper {
-          flex: 1;
-          width: 100%;
-        }
-      }
     </style>
   </head>
   <body>
@@ -404,125 +370,120 @@
         </table>
       </div>
 
-      <!-- CONTENT WRAPPER: FORM AND TABLE SIDE BY SIDE -->
-      <div class="content-wrapper">
-        <!-- FORM SECTION -->
-        <div class="form-wrapper" id="form_data">
-          <h3>Create, Retrieve, Update, and Delete a Promotion:</h3>
-          <div class="well">
-            <!-- TOP SECTION: ID, Buttons, and Active Toggle -->
-            <div class="top-section">
-              <!-- Promotion ID -->
-              <div class="id-wrapper">
-                <label class="control-label" for="pet_id">Promotion ID:</label>
-                <input type="text" class="form-control" id="pet_id" placeholder="Enter ID">
-              </div>
-
-              <!-- Retrieve and Delete Buttons -->
-              <div class="buttons-wrapper">
-                <button type="submit" class="btn" id="retrieve-btn">Retrieve</button>
-                <button type="submit" class="btn" id="delete-btn">Delete</button>
-              </div>
-
-              <!-- Active Toggle -->
-              <div class="active-wrapper">
-                <label class="toggle-label">Promotion Active:</label>
-                <div class="toggle-group">
-                  <button type="button" class="toggle-btn active" id="active-true" data-value="true">True</button>
-                  <button type="button" class="toggle-btn" id="active-false" data-value="false">False</button>
-                </div>
-                <input type="hidden" id="pet_available" value="true">
-              </div>
+      <!-- FORM -->
+      <div id="form_data">
+        <h3>Create, Retrieve, Update, and Delete a Promotion:</h3>
+        <div class="well">
+          <!-- TOP SECTION: ID, Buttons, and Active Toggle -->
+          <div class="top-section">
+            <!-- Promotion ID -->
+            <div class="id-wrapper">
+              <label class="control-label" for="pet_id">Promotion ID:</label>
+              <input type="text" class="form-control" id="pet_id" placeholder="Enter ID">
             </div>
 
-            <!-- FORM FIELDS -->
-            <div>
-              <!-- NAME and PROMO CODE Side by Side -->
-              <div class="form-row">
-                <div class="field-wrapper">
-                  <label class="control-label" for="pet_name">Name:</label>
-                  <input type="text" class="form-control" id="pet_name" placeholder="Enter name for Promotion">
-                </div>
-                <div class="field-wrapper">
-                  <label class="control-label" for="promo_code">Promo Code:</label>
-                  <input type="text" class="form-control" id="promo_code" placeholder="Enter promo code">
-                </div>
-              </div>
-
-              <!-- DESCRIPTION -->
-              <div class="form-group">
-                <label class="control-label" for="pet_category">Description:</label>
-                <input type="text" class="form-control" id="pet_category" placeholder="Enter description">
-              </div>
-
-              <!-- PROMOTION TYPE (Toggle Button) -->
-              <div class="form-group">
-                <label class="toggle-label">Promotion Type:</label>
-                <div class="toggle-group">
-                  <button type="button" class="toggle-btn active" id="type-percentage" data-value="percentage">Percentage</button>
-                  <button type="button" class="toggle-btn" id="type-fixed" data-value="fixed_amount">Fixed Amount</button>
-                </div>
-                <input type="hidden" id="pet_gender" value="percentage">
-              </div>
-
-              <!-- DISCOUNT AMOUNT -->
-              <div class="form-group">
-                <label class="control-label" for="discount_amount">Discount Amount:</label>
-                <input type="number" step="0.01" class="form-control" id="discount_amount" placeholder="0.00">
-              </div>
-
-              <!-- START DATE and END DATE Side by Side -->
-              <div class="form-row">
-                <div class="field-wrapper">
-                  <label class="control-label" for="pet_birthday">Start Date:</label>
-                  <input type="date" class="form-control" id="pet_birthday" placeholder="2020-04-01">
-                </div>
-                <div class="field-wrapper">
-                  <label class="control-label" for="end_date">End Date:</label>
-                  <input type="date" class="form-control" id="end_date" placeholder="2020-12-31">
-                </div>
-              </div>
-
-              <!-- PRODUCT ID and DISCOUNT AMOUNT Side by Side -->
-              <div class="form-group">
-                <label class="control-label" for="product_id">Product ID:</label>
-                <input type="number" class="form-control" id="product_id" placeholder="1">
-              </div>
-
-              <!-- SUBMIT BUTTONS -->
-              <div class="button-container">
-                <button type="submit" class="btn" id="search-btn">Search</button>
-                <button type="submit" class="btn" id="clear-btn">Clear</button>
-                <button type="submit" class="btn" id="create-btn">Create</button>
-                <button type="submit" class="btn" id="update-btn">Update</button>
-                <button type="submit" class="btn" id="activate-btn">Activate</button>
-                <button type="submit" class="btn" id="deactivate-btn">Deactivate</button>
-              </div>
+            <!-- Retrieve and Delete Buttons -->
+            <div class="buttons-wrapper">
+              <button type="submit" class="btn" id="retrieve-btn">Retrieve</button>
+              <button type="submit" class="btn" id="delete-btn">Delete</button>
             </div>
-          </div> <!-- end well -->
-        </div> <!-- end Form -->
 
-        <!-- TABLE SECTION -->
-        <div class="table-wrapper">
-          <!-- Search Results -->
-          <div class="table-responsive" id="search_results">
-            <h3>Promotions Records:</h3>
-            <table class="table table-striped">
-              <thead>
-              <tr>
-                <th class="col-md-1">ID</th>
-                <th class="col-md-2">Name</th>
-                <th class="col-md-2">Type</th>
-                <th class="col-md-1">Active</th>
-                <th class="col-md-1">Product</th>
-                <th class="col-md-2">Start</th>
-                <th class="col-md-2">End</th>
-              </tr>
-              </thead>
-            </table>
+            <!-- Active Toggle -->
+            <div class="active-wrapper">
+              <label class="toggle-label">Promotion Active:</label>
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn" id="active-all" data-value="all">All</button>
+                <button type="button" class="toggle-btn active" id="active-true" data-value="true">True</button>
+                <button type="button" class="toggle-btn" id="active-false" data-value="false">False</button>
+              </div>
+              <input type="hidden" id="pet_available" value="true">
+            </div>
           </div>
-        </div> <!-- end Table Wrapper -->
-      </div> <!-- end content-wrapper -->
+
+          <!-- FORM FIELDS -->
+          <div>
+            <!-- NAME and PROMO CODE Side by Side -->
+            <div class="form-row">
+              <div class="field-wrapper">
+                <label class="control-label" for="pet_name">Name:</label>
+                <input type="text" class="form-control" id="pet_name" placeholder="Enter name for Promotion">
+              </div>
+              <div class="field-wrapper">
+                <label class="control-label" for="promo_code">Promo Code:</label>
+                <input type="text" class="form-control" id="promo_code" placeholder="Enter promo code">
+              </div>
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="form-group">
+              <label class="control-label" for="pet_category">Description:</label>
+              <input type="text" class="form-control" id="pet_category" placeholder="Enter description">
+            </div>
+
+            <!-- PROMOTION TYPE (Toggle Button) -->
+            <div class="form-group">
+              <label class="toggle-label">Promotion Type:</label>
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn" id="type-all" data-value="all">All</button>
+                <button type="button" class="toggle-btn active" id="type-percentage" data-value="percentage">Percentage</button>
+                <button type="button" class="toggle-btn" id="type-fixed" data-value="fixed_amount">Fixed Amount</button>
+              </div>
+              <input type="hidden" id="pet_gender" value="percentage">
+            </div>
+
+            <!-- DISCOUNT AMOUNT -->
+            <div class="form-group">
+              <label class="control-label" for="discount_amount">Discount Amount:</label>
+              <input type="number" step="0.01" class="form-control" id="discount_amount" placeholder="0.00">
+            </div>
+
+            <!-- START DATE and END DATE Side by Side -->
+            <div class="form-row">
+              <div class="field-wrapper">
+                <label class="control-label" for="pet_birthday">Start Date:</label>
+                <input type="date" class="form-control" id="pet_birthday" placeholder="2020-04-01">
+              </div>
+              <div class="field-wrapper">
+                <label class="control-label" for="end_date">End Date:</label>
+                <input type="date" class="form-control" id="end_date" placeholder="2020-12-31">
+              </div>
+            </div>
+
+            <!-- PRODUCT ID and DISCOUNT AMOUNT Side by Side -->
+            <div class="form-group">
+              <label class="control-label" for="product_id">Product ID:</label>
+              <input type="number" class="form-control" id="product_id" placeholder="1">
+            </div>
+
+            <!-- SUBMIT BUTTONS -->
+            <div class="button-container">
+              <button type="submit" class="btn" id="search-btn">Search</button>
+              <button type="submit" class="btn" id="clear-btn">Clear</button>
+              <button type="submit" class="btn" id="create-btn">Create</button>
+              <button type="submit" class="btn" id="update-btn">Update</button>
+              <button type="submit" class="btn" id="activate-btn">Activate</button>
+              <button type="submit" class="btn" id="deactivate-btn">Deactivate</button>
+            </div>
+          </div>
+        </div> <!-- end well -->
+      </div> <!-- end Form -->
+
+      <!-- Search Results -->
+      <div class="table-responsive" id="search_results">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th class="col-md-1">ID</th>
+            <th class="col-md-2">Name</th>
+            <th class="col-md-2">Type</th>
+            <th class="col-md-1">Active</th>
+            <th class="col-md-1">Product</th>
+            <th class="col-md-2">Start</th>
+            <th class="col-md-2">End</th>
+          </tr>
+          </thead>
+        </table>
+      </div>
 
     </div> <!-- container -->
 
@@ -544,7 +505,16 @@
         e.preventDefault();
         $("#active-false").addClass("active");
         $("#active-true").removeClass("active");
+        $("#active-all").removeClass("active");
         $("#pet_available").val("false");
+      });
+
+      $("#active-all").click(function(e) {
+        e.preventDefault();
+        $("#active-all").addClass("active");
+        $("#active-true").removeClass("active");
+        $("#active-false").removeClass("active");
+        $("#pet_available").val("all");
       });
 
       // Promotion type toggle buttons
@@ -552,6 +522,7 @@
         e.preventDefault();
         $("#type-percentage").addClass("active");
         $("#type-fixed").removeClass("active");
+        $("#type-all").removeClass("active");
         $("#pet_gender").val("percentage");
       });
 
@@ -559,7 +530,16 @@
         e.preventDefault();
         $("#type-fixed").addClass("active");
         $("#type-percentage").removeClass("active");
+        $("#type-all").removeClass("active");
         $("#pet_gender").val("fixed_amount");
+      });
+
+      $("#type-all").click(function(e) {
+        e.preventDefault();
+        $("#type-all").addClass("active");
+        $("#type-percentage").removeClass("active");
+        $("#type-fixed").removeClass("active");
+        $("#pet_gender").val("all");
       });
     });
   </script>

@@ -206,4 +206,4 @@ class Promotion(db.Model):
             query = query.filter(cls.is_active == kwargs["is_active"])
         if "product_id" in kwargs:
             query = query.filter(cls.product_id == kwargs["product_id"])
-        return query
+        return query.all()

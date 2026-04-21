@@ -363,14 +363,16 @@ $(function () {
         if (name) {
             queryString += 'name=' + encodeURIComponent(name)
         }
-        if (typeVal) {
+        // Only add type filter if it's not set to "all"
+        if (typeVal && typeVal !== "all") {
             if (queryString.length > 0) {
                 queryString += '&type=' + encodeURIComponent(typeVal)
             } else {
                 queryString += 'type=' + encodeURIComponent(typeVal)
             }
         }
-        if (is_active !== "") {
+        // Only add is_active filter if it's not empty and not set to "all"
+        if (is_active && is_active !== "" && is_active !== "all") {
             if (queryString.length > 0) {
                 queryString += '&is_active=' + encodeURIComponent(is_active)
             } else {

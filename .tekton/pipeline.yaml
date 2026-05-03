@@ -14,16 +14,10 @@ spec:
       type: string
       default: master
       description: Branch to build from.
-    - name: image-name
-      type: string
-      description: Full image path including registry, name, and tag.
   workspaces:
     - name: pipeline-workspace
 
   tasks:
-    # -------------------------------------------------------
-    # 1. Clone — Story #1 (Yash)
-    # -------------------------------------------------------
     - name: clone
       taskRef:
         name: git-clone
@@ -35,61 +29,3 @@ spec:
       workspaces:
         - name: output
           workspace: pipeline-workspace
-
-    # -------------------------------------------------------
-    # 2. Lint — Story #9 (Mario)
-    # -------------------------------------------------------
-    # - name: lint
-    #   taskRef:
-    #     name: lint
-    #   runAfter: [clone]
-    #   workspaces:
-    #     - name: source
-    #       workspace: pipeline-workspace
-
-    # -------------------------------------------------------
-    # 3. Unit Tests — Story #9 (Mario)
-    # -------------------------------------------------------
-    # - name: unit-tests
-    #   taskRef:
-    #     name: unit-tests
-    #   runAfter: [clone]
-    #   workspaces:
-    #     - name: source
-    #       workspace: pipeline-workspace
-
-    # -------------------------------------------------------
-    # 4. Build Image — Story #4 (Sushant)
-    # -------------------------------------------------------
-    # - name: build-image
-    #   taskRef:
-    #     name: build-image
-    #   runAfter: [lint, unit-tests]
-    #   params:
-    #     - name: image-name
-    #       value: $(params.image-name)
-    #   workspaces:
-    #     - name: source
-    #       workspace: pipeline-workspace
-
-    # -------------------------------------------------------
-    # 5. Deploy — Story #5 (Sushant)
-    # -------------------------------------------------------
-    # - name: deploy
-    #   taskRef:
-    #     name: deploy
-    #   runAfter: [build-image]
-    #   params:
-    #     - name: image-name
-    #       value: $(params.image-name)
-
-    # -------------------------------------------------------
-    # 6. BDD Tests — Story #10 (Mario)
-    # -------------------------------------------------------
-    # - name: bdd
-    #   taskRef:
-    #     name: bdd
-    #   runAfter: [deploy]
-    #   workspaces:
-    #     - name: source
-    #       workspace: pipeline-workspace

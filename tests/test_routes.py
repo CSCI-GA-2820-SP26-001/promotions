@@ -17,6 +17,7 @@
 TestPromotion API Service Test Suite
 """
 # pylint: disable=duplicate-code
+from datetime import date
 import os
 import logging
 from unittest import TestCase
@@ -284,6 +285,7 @@ class TestPromotionService(TestCase):
         logging.debug("Response data = %s", data)
         self.assertIn("was not found", data["message"])
         # ----------------------------------------------------------
+
     # TEST CREATE
 
     # ----------------------------------------------------------
@@ -301,7 +303,10 @@ class TestPromotionService(TestCase):
         self.assertIsNotNone(new_promotion["id"])
         self.assertEqual(new_promotion["name"], test_promotion.name)
         self.assertEqual(new_promotion["promotion_type"], test_promotion.promotion_type)
-        self.assertEqual(float(new_promotion["discount_amount"]), float(test_promotion.discount_amount))
+        self.assertEqual(
+            float(new_promotion["discount_amount"]),
+            float(test_promotion.discount_amount),
+        )
         self.assertEqual(new_promotion["product_id"], test_promotion.product_id)
         self.assertEqual(new_promotion["is_active"], test_promotion.is_active)
 
@@ -332,7 +337,8 @@ class TestPromotionService(TestCase):
         self.assertEqual(retrieved["id"], promotion_id)
         self.assertEqual(retrieved["name"], test_promotion.name)
         self.assertEqual(retrieved["promotion_type"], test_promotion.promotion_type)
-# ----------------------------------------------------------
+
+    # ----------------------------------------------------------
     # TEST MODEL COVERAGE
 
     # ----------------------------------------------------------
@@ -352,7 +358,7 @@ class TestPromotionService(TestCase):
 
     def test_deserialize_with_date_objects(self):
         """It should deserialize a Promotion with date objects instead of strings"""
-        from datetime import date
+
         promotion = PromotionFactory()
         data = promotion.serialize()
         data["start_date"] = date.fromisoformat(data["start_date"])
@@ -380,7 +386,6 @@ class TestPromotionService(TestCase):
         """It should find Promotions by type"""
         promotions = self._create_promotions(5)
         target_type = promotions[0].promotion_type
-        from service.models import Promotion
         results = Promotion.find_by_type(target_type).all()
         self.assertGreater(len(results), 0)
         for p in results:
@@ -390,7 +395,6 @@ class TestPromotionService(TestCase):
         """It should find Promotions by name"""
         promotions = self._create_promotions(5)
         target_name = promotions[0].name
-        from service.models import Promotion
         results = Promotion.find_by_name(target_name).all()
         self.assertGreater(len(results), 0)
         for p in results:

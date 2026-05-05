@@ -1,0 +1,32 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildah
+  labels:
+    app: promotions
+spec:
+  description: Builds a container image from a Dockerfile and pushes it to the registry.
+  params:
+    - name: IMAGE
+      type: string
+      description: Full image name to build and push (e.g. image-registry.openshift-image-registry.svc:5000/project/promotions:latest).
+  workspaces:
+    - name: source
+      description: The workspace containing the cloned repository.
+  steps:
+    - name: build-and-push
+      image: quay.io/buildah/stable:latest
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        privileged: true
+      env:
+        - name: IMAGE
+          value: $(params.IMAGE)
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "Building image: ${IMAGE}"
+        buildah bud --format=oci --tag "${IMAGE}" .
+        echo "Pushing image: ${IMAGE}"
+        buildah push --tls-verify=false "${IMAGE}"
+        echo "Build and push complete."

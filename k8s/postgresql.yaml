@@ -53,24 +53,24 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:15-alpine
+          image: image-registry.openshift-image-registry.svc:5000/openshift/postgresql:15-el9
           ports:
             - containerPort: 5432
           env:
-            - name: POSTGRES_PASSWORD
+            - name: POSTGRESQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-credentials
                   key: password
-            - name: POSTGRES_DB
+            - name: POSTGRESQL_DATABASE
               value: postgres
-            - name: POSTGRES_USER
+            - name: POSTGRESQL_USER
               value: postgres
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: postgres-storage
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/pgsql/data
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "postgres"]

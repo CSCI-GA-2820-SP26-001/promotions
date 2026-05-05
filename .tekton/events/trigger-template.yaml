@@ -9,11 +9,14 @@ spec:
     - name: repo-url
       description: Git repository URL from the webhook payload.
     - name: branch
-      default: refs/heads/master
-      description: Git ref from the webhook payload.
+      default: master
+      description: Git branch name from the webhook payload.
     - name: image-name
       # Replace YOUR_PROJECT with your OpenShift project/namespace name
-      default: image-registry.openshift-image-registry.svc:5000/YOUR_PROJECT/promotions:latest
+      default: image-registry.openshift-image-registry.svc:5000/sushant-b-dev/promotions:latest
+    - name: base-url
+      # Replace with your OpenShift route URL, e.g. https://promotions-YOUR_PROJECT.apps.cluster.example.com
+      default: https://promotions-sushant-b-dev.apps.rm1.0a51.p1.openshiftapps.com
   resourceTemplates:
     - apiVersion: tekton.dev/v1
       kind: PipelineRun
@@ -31,6 +34,8 @@ spec:
             value: $(tt.params.branch)
           - name: image-name
             value: $(tt.params.image-name)
+          - name: base-url
+            value: $(tt.params.base-url)
         workspaces:
           - name: pipeline-workspace
             persistentVolumeClaim:

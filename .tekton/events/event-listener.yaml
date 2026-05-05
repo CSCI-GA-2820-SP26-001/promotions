@@ -14,6 +14,13 @@ spec:
           params:
             - name: eventTypes
               value: ["push"]
+        - ref:
+            name: cel
+          params:
+            - name: overlays
+              value:
+                - key: branch_name
+                  expression: "body.ref.split('/')[2]"
       bindings:
         - ref: cd-binding
       template:

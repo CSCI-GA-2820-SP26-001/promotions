@@ -9,5 +9,4 @@ spec:
     - name: repo-url
       value: $(body.repository.clone_url)
     - name: branch
-      # Strips "refs/heads/" prefix from the GitHub push event ref
-      value: $(body.ref)
+      value: $(extensions.branch_name)

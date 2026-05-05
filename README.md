@@ -1,49 +1,17 @@
-# NYU DevOps Project Template
+# Promotions Service
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 [![CI Build](https://github.com/CSCI-GA-2820-SP26-001/promotions/actions/workflows/ci.yml/badge.svg)](https://github.com/CSCI-GA-2820-SP26-001/promotions/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/CSCI-GA-2820-SP26-001/promotions/branch/master/graph/badge.svg)](https://codecov.io/gh/CSCI-GA-2820-SP26-001/promotions)
 
-
-This is a skeleton you can use to start your projects.
-
-**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
-
 ## Overview
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
-
-## Automatic Setup
-
-The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
-
-## Manual Setup
-
-You can also clone this repository and then copy and paste the starter code into your project repo folder on your local computer. Be careful not to copy over your own `README.md` file so be selective in what you copy.
-
-There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
-
-These should be copied using a bash shell as follows:
-
-```bash
-    cp .gitignore  ../<your_repo_folder>/
-    cp .flaskenv ../<your_repo_folder>/
-    cp .gitattributes ../<your_repo_folder>/
-```
+The Promotions service is a RESTful microservice built with Flask that manages promotional offers. It is deployed to OpenShift using a Tekton CD pipeline that automatically validates, builds, and deploys the service on every push to master.
 
 ## Contents
 
-The project contains the following:
-
 ```text
-.gitignore          - this will ignore vagrant and other metadata files
-.flaskenv           - Environment variables to configure Flask
-.gitattributes      - File to gix Windows CRLF issues
-.devcontainers/     - Folder with support for VSCode Remote Containers
-dot-env-example     - copy to .env to use environment variables
-pyproject.toml      - Poetry list of Python libraries required by your code
-
 service/                   - service python package
 ├── __init__.py            - package initializer
 ├── config.py              - configuration parameters
@@ -61,6 +29,96 @@ tests/                     - test cases package
 ├── test_cli_commands.py   - test suite for the CLI
 ├── test_models.py         - test suite for business models
 └── test_routes.py         - test suite for service routes
+
+features/                  - BDD test suite
+├── environment.py         - Flask app context setup
+├── promotions.feature     - Gherkin scenarios for all flows
+└── steps/
+    └── steps.py           - Step definitions
+
+.tekton/                   - Tekton CD pipeline manifests
+├── pipeline.yaml          - Full CD pipeline definition
+├── workspace.yaml         - Shared PersistentVolumeClaim
+├── tasks/
+│   ├── clone.yaml         - Clones the repository
+│   ├── lint.yaml          - Runs flake8 and pylint
+│   ├── unittest.yaml      - Runs pytest with coverage
+│   ├── build.yaml         - Builds and pushes container image
+│   └── bdd.yaml           - Runs Behave BDD tests
+└── triggers/
+    ├── event-listener.yaml    - Listens for GitHub push events
+    ├── trigger-binding.yaml   - Extracts values from the GitHub payload
+    └── trigger-template.yaml  - Creates a PipelineRun on trigger
+
+k8s/                       - Kubernetes/OpenShift manifests
+├── deployment.yaml        - App deployment configuration
+├── postgresql.yaml        - PostgreSQL deployment
+├── service.yaml           - Kubernetes service
+└── route.yaml             - OpenShift route
+```
+
+## Sprint 4 — CD Pipeline (Tekton + OpenShift)
+
+### Pipeline Overview
+
+The Sprint 4 CD pipeline is defined in `.tekton/pipeline.yaml` and runs the following tasks in order:
+
+Each stage must pass before the next one begins. If any stage fails, the pipeline stops and the deployment does not proceed.
+
+### Pipeline Tasks
+
+| Task | File | Description |
+|------|------|-------------|
+| clone | `tasks/clone.yaml` | Clones the master branch into the shared workspace using `alpine/git` |
+| lint | `tasks/lint.yaml` | Runs `flake8` and `pylint` against `service/` and `tests/` |
+| unit-test | `tasks/unittest.yaml` | Runs `pytest` with a minimum 95% coverage requirement |
+| build | `tasks/build.yaml` | Builds the container image using `buildah` and pushes to the OpenShift registry |
+| bdd-tests | `tasks/bdd.yaml` | Runs `behave` BDD tests against the live OpenShift route using `BASE_URL` |
+
+### Shared Workspace
+
+All tasks share a `PersistentVolumeClaim` defined in `workspace.yaml` named `pipeline-workspace` (1Gi, ReadWriteOnce). This allows the cloned source code to be passed between tasks without re-cloning.
+
+### Triggers
+
+The pipeline is triggered automatically on every push to master via a GitHub webhook. The trigger setup consists of three resources:
+
+- **EventListener** (`triggers/event-listener.yaml`) — exposes a route that receives GitHub push events
+- **TriggerBinding** (`triggers/trigger-binding.yaml`) — extracts the repo URL and branch from the GitHub payload
+- **TriggerTemplate** (`triggers/trigger-template.yaml`) — creates a new `PipelineRun` with the extracted values
+
+### OpenShift Deployment Flow
+
+1. PostgreSQL is deployed to OpenShift using `k8s/postgresql.yaml`
+2. The Promotions service is deployed using `k8s/deployment.yaml`
+3. A Kubernetes service is created via `k8s/service.yaml`
+4. An OpenShift route is exposed via `k8s/route.yaml`
+5. The pipeline verifies the deployment by running BDD tests against the live route URL
+
+### OpenShift Route
+
+The live route URL for the Promotions service is documented in the final submission checklist. The `/health` endpoint should return:
+
+```json
+{"status": "OK"}
+```
+
+## Running Tests Locally
+
+**Unit tests:**
+```bash
+pytest --pspec --cov=service --cov-fail-under=95
+```
+
+**BDD tests:**
+```bash
+BASE_URL=http://localhost:8080 python -m behave
+```
+
+**Lint:**
+```bash
+flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
+pylint service tests --max-line-length=127
 ```
 
 ## License

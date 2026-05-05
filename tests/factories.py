@@ -7,7 +7,7 @@ import factory
 from service.models import Promotion
 
 
-class PromotionFactory(factory.Factory):
+class PromotionFactory(factory.Factory):  # pylint: disable=too-few-public-methods
     """Creates fake promotions that you don't have to feed"""
 
     class Meta:  # pylint: disable=too-few-public-methods

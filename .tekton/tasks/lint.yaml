@@ -16,7 +16,8 @@ spec:
       script: |
         #!/bin/sh
         set -eu
-        pip install flake8 pylint --quiet
+        pip install pipenv flake8 pylint --quiet
+        pipenv install --system --dev --quiet
         echo "Running flake8..."
         flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics

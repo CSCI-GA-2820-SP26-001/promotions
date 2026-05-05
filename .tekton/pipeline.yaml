@@ -32,6 +32,8 @@ spec:
           value: $(params.repo-url)
         - name: revision
           value: $(params.branch)
+        - name: deleteExisting
+          value: "true"
       workspaces:
         - name: output
           workspace: pipeline-workspace

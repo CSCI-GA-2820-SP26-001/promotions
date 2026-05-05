@@ -20,6 +20,11 @@ spec:
       env:
         - name: BASE_URL
           value: $(params.BASE_URL)
+        - name: DATABASE_URI
+          valueFrom:
+            secretKeyRef:
+              name: promotions-secrets
+              key: database-uri
       script: |
         #!/bin/sh
         set -eu

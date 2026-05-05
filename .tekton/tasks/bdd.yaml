@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: bdd-tests
+  labels:
+    app: promotions
+spec:
+  description: Runs Behave BDD tests against the deployed OpenShift route.
+  params:
+    - name: BASE_URL
+      type: string
+      description: The URL of the deployed Promotions service.
+  workspaces:
+    - name: source
+      description: The workspace containing the cloned repository.
+  steps:
+    - name: bdd-tests
+      image: python:3.12-slim
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: BASE_URL
+          value: $(params.BASE_URL)
+      script: |
+        #!/bin/sh
+        set -eu
+        pip install pipenv --quiet
+        pipenv install --system --dev --quiet
+        echo "Running BDD tests against ${BASE_URL}..."
+        python -m behave
+        echo "BDD tests passed."

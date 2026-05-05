@@ -18,7 +18,10 @@ spec:
       image: quay.io/buildah/stable:latest
       workingDir: $(workspaces.source.path)
       securityContext:
-        privileged: true
+        runAsUser: 0
+        capabilities:
+          add:
+            - SETFCAP
       env:
         - name: IMAGE
           value: $(params.IMAGE)
@@ -26,7 +29,7 @@ spec:
         #!/bin/sh
         set -eu
         echo "Building image: ${IMAGE}"
-        buildah bud --format=oci --tag "${IMAGE}" .
+        buildah bud --storage-driver=vfs --isolation=chroot --format=oci --tag "${IMAGE}" .
         echo "Pushing image: ${IMAGE}"
-        buildah push --tls-verify=false "${IMAGE}"
+        buildah push --storage-driver=vfs --tls-verify=false "${IMAGE}"
         echo "Build and push complete."

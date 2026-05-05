@@ -20,6 +20,8 @@ spec:
       env:
         - name: BASE_URL
           value: $(params.BASE_URL)
+        - name: DATABASE_URI
+          value: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/postgres"
       script: |
         #!/bin/sh
         set -eu

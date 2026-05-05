@@ -15,18 +15,26 @@ spec:
       description: The workspace containing the cloned repository.
   steps:
     - name: build-and-push
-      image: quay.io/buildah/stable:latest
+      image: gcr.io/kaniko-project/executor:v1.23.0
       workingDir: $(workspaces.source.path)
-      securityContext:
-        privileged: true
       env:
         - name: IMAGE
           value: $(params.IMAGE)
-      script: |
-        #!/bin/sh
-        set -eu
-        echo "Building image: ${IMAGE}"
-        buildah bud --format=oci --tag "${IMAGE}" .
-        echo "Pushing image: ${IMAGE}"
-        buildah push --tls-verify=false "${IMAGE}"
-        echo "Build and push complete."
+        - name: DOCKER_CONFIG
+          value: /kaniko/.docker
+      volumeMounts:
+        - name: registry-credentials
+          mountPath: /kaniko/.docker
+      args:
+        - --dockerfile=Dockerfile
+        - --context=$(workspaces.source.path)
+        - --destination=$(params.IMAGE)
+        - --insecure
+        - --skip-tls-verify
+  volumes:
+    - name: registry-credentials
+      secret:
+        secretName: registry-credentials
+        items:
+          - key: .dockerconfigjson
+            path: config.json

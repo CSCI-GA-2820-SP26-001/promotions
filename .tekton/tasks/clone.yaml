@@ -31,7 +31,7 @@ spec:
         #!/bin/sh
         set -eu
 
-        rm -rf "${WORKSPACE_PATH:?}"/*
+        find "${WORKSPACE_PATH}" -mindepth 1 -delete
 
         git clone \
           --depth 1 \

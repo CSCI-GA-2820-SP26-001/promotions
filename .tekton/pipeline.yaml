@@ -14,6 +14,12 @@ spec:
       type: string
       default: master
       description: Branch to build from.
+    - name: image-name
+      type: string
+      description: Full image name to build and push (e.g. image-registry.openshift-image-registry.svc:5000/project/promotions:latest).
+    - name: base-url
+      type: string
+      description: The URL of the deployed Promotions service for BDD tests.
   workspaces:
     - name: pipeline-workspace
 
@@ -28,4 +34,56 @@ spec:
           value: $(params.branch)
       workspaces:
         - name: output
+          workspace: pipeline-workspace
+
+    - name: lint
+      taskRef:
+        name: lint
+      runAfter:
+        - clone
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+
+    - name: unit-test
+      taskRef:
+        name: unit-test
+      runAfter:
+        - clone
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+
+    - name: build
+      taskRef:
+        name: buildah
+      runAfter:
+        - lint
+        - unit-test
+      params:
+        - name: IMAGE
+          value: $(params.image-name)
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+
+    - name: deploy
+      taskRef:
+        name: deploy
+      runAfter:
+        - build
+      params:
+        - name: IMAGE
+          value: $(params.image-name)
+
+    - name: bdd-tests
+      taskRef:
+        name: bdd-tests
+      runAfter:
+        - deploy
+      params:
+        - name: BASE_URL
+          value: $(params.base-url)
+      workspaces:
+        - name: source
           workspace: pipeline-workspace

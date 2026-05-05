@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: deploy
+  labels:
+    app: promotions
+spec:
+  description: Deploys the application to OpenShift by updating the container image.
+  params:
+    - name: IMAGE
+      type: string
+      description: Full image name that was built and pushed (e.g. image-registry.openshift-image-registry.svc:5000/project/promotions:latest).
+  steps:
+    - name: deploy
+      image: bitnami/kubectl:latest
+      env:
+        - name: IMAGE
+          value: $(params.IMAGE)
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "Deploying image: ${IMAGE}"
+        kubectl set image deployment/promotions promotions="${IMAGE}"
+        kubectl rollout status deployment/promotions --timeout=120s
+        echo "Deployment complete."

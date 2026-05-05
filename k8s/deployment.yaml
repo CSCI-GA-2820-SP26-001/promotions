@@ -43,7 +43,7 @@ spec:
       containers:
         - name: promotions
           # Replace YOUR_PROJECT with your OpenShift project/namespace
-          image: image-registry.openshift-image-registry.svc:5000/YOUR_PROJECT/promotions:latest
+          image: image-registry.openshift-image-registry.svc:5000/sushant-b-dev/promotions:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

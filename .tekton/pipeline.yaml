@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: cd-pipeline
+  labels:
+    app: promotions
+spec:
+  description: CD pipeline for the Promotions service.
+  params:
+    - name: repo-url
+      type: string
+      description: GitHub repository URL.
+    - name: branch
+      type: string
+      default: master
+      description: Branch to build from.
+  workspaces:
+    - name: pipeline-workspace
+
+  tasks:
+    - name: clone
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.branch)
+      workspaces:
+        - name: output
+          workspace: pipeline-workspace

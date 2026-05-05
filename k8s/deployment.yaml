@@ -1,0 +1,74 @@
+# -------------------------------------------------------
+# Promotions Service Deployment — Story #3 (Yash)
+#
+# Before applying, build and push the image:
+#   export PROJECT=$(oc project -q)
+#   docker build -t image-registry.openshift-image-registry.svc:5000/$PROJECT/promotions:latest .
+#   docker push image-registry.openshift-image-registry.svc:5000/$PROJECT/promotions:latest
+#
+# Then replace YOUR_PROJECT below with your OpenShift project name
+# and apply: kubectl apply -f k8s/deployment.yaml
+# -------------------------------------------------------
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: promotions-secrets
+  labels:
+    app: promotions
+type: Opaque
+stringData:
+  # Must match the PostgreSQL password in postgresql.yaml
+  database-uri: postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/postgres
+  secret-key: sup3r-s3cr3t
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: promotions
+  labels:
+    app: promotions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: promotions
+  template:
+    metadata:
+      labels:
+        app: promotions
+    spec:
+      containers:
+        - name: promotions
+          # Replace YOUR_PROJECT with your OpenShift project/namespace
+          image: image-registry.openshift-image-registry.svc:5000/YOUR_PROJECT/promotions:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: promotions-secrets
+                  key: database-uri
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: promotions-secrets
+                  key: secret-key
+            - name: PORT
+              value: "8080"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
